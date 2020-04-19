@@ -1,39 +1,41 @@
 "use strict";
 
 $("#colorPicker").spectrum({
-    change: function(color){ctx.strokeStyle = color.toRgbString();},
-    color: "black",
     preferredFormat: "hex",
     showPalette: true,
-
-    palette: [["black"], ["darkred"],["seagreen"],["navy"],["indigo"], ["chocolate"]]
+    showPaletteOnly: true,
+    togglePaletteOnly: true,
+    togglePaletteMoreText: '>',
+    togglePaletteLessText: '<',
+    palette: [["black"], ["red"], ["mediumseagreen"], ["mediumblue"], ["rebeccapurple"], ["darkorange"]],
+    replacerClassName: "sp-replacer bg-secondary",
 });
 
-let canvas = document.getElementById("canvas");
-let ctx = canvas.getContext("2d", {desynchronized: true});
+let canvas;
+let ctx;
 let pointerMap = {};
 let lines = [];
 
 window.addEventListener('load', init);
-window.addEventListener('resize', init);
+window.addEventListener('resize', setSize);
 
-canvas.addEventListener('pointerdown', pointerDown);
-canvas.addEventListener('pointermove', pointerMove);
-canvas.addEventListener('pointerleave', pointerDelete);
-canvas.addEventListener('pointerup', pointerDelete);
+function init() {
+    canvas = document.getElementById("canvas");
+    ctx = canvas.getContext("2d", { desynchronized: true });
+    canvas.addEventListener('pointerdown', pointerDown);
+    canvas.addEventListener('pointermove', pointerMove);
+    canvas.addEventListener('pointerleave', pointerDelete);
+    canvas.addEventListener('pointerup', pointerDelete);
+    setSize();  
+}
 
-
-
-function init(){
-    canvas.height = document.body.clientHeight;
-    canvas.width = document.body.clientWidth;
-    ctx.imageSmoothingEnabled = true;
-    ctx.lineJoin = "round";
-    ctx.lineCap = "round";
+function setSize() {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
 
 }
 
-function draw(event, pointer){
+function draw(event, pointer) {
     pointer.setPos(event);
     ctx.lineWidth = event.pressure ? event.pressure * 8 : 4;
     ctx.beginPath();
@@ -44,34 +46,45 @@ function draw(event, pointer){
     pointer.pos0.y = pointer.pos1.y;
 }
 
-function pointerDown(event){
+function pointerDown(event) {
     let pointer = new Pointer(event.pointerId, event.clientX, event.clientY);
+    ctx.strokeStyle = $("#colorPicker").spectrum("get").toRgbString();
     draw(event, pointer);
 }
 
-function pointerMove(event){
+function pointerMove(event) {
     let pointer = pointerMap[event.pointerId];
-    if(pointer){        
+    if (pointer) {
         draw(event, pointer);
     }
 }
 
-function pointerDelete(event){
+function pointerDelete(event) {
     Pointer.delete(event.pointerId);
 }
 
+class Brush {
+
+    constructor() {
+
+    }
+    setMode() {
+
+    }
+}
+
 class Pointer {
-    constructor(id, x=-1, y=-1){
+    constructor(id, x = -1, y = -1) {
         this.id = id;
-        this.pos0 = {x: x, y: y};
-        this.pos1 = {x: x, y: y};
+        this.pos0 = { x: x, y: y };
+        this.pos1 = { x: x, y: y };
         pointerMap[id] = this;
     }
-    setPos(event){
+    setPos(event) {
         this.pos1.x = event.clientX;
         this.pos1.y = event.clientY;
     }
-    static delete(id){
-        delete pointerMap[id];  
+    static delete(id) {
+        delete pointerMap[id];
     }
 }
