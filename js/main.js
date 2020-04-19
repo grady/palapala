@@ -1,5 +1,7 @@
 "use strict";
 
+//import simplify from "../lib/simplify-js-1.2.4/simplify";
+
 $("#colorPicker").spectrum({
     preferredFormat: "hex",
     showPalette: true,
@@ -26,13 +28,16 @@ function init() {
     canvas.addEventListener('pointermove', pointerMove);
     canvas.addEventListener('pointerleave', pointerDelete);
     canvas.addEventListener('pointerup', pointerDelete);
+    ctx.lineJoin = "round";
     setSize();  
 }
 
 function setSize() {
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
-
+    for(let i=0;i<lines.length;i++){
+        drawLine(lines[i]);
+    }
 }
 
 function draw(event, pointer) {
@@ -46,20 +51,40 @@ function draw(event, pointer) {
     pointer.pos0.y = pointer.pos1.y;
 }
 
+function drawLine(line, config){
+    ctx.save();
+    if(config && config.color) ctx.strokeStyle = config.color;
+    ctx.strokeStyle = line[0].color;
+    ctx.lineWidth = line[0].width;
+    ctx.beginPath();
+    ctx.moveTo(line[0].x, line[0].y);
+    for (let i=1; i < line.length; i++){
+        ctx.lineTo(line[i].x, line[i].y);
+    }
+    ctx.stroke();
+    ctx.restore();
+}
+
 function pointerDown(event) {
     let pointer = new Pointer(event.pointerId, event.clientX, event.clientY);
     ctx.strokeStyle = $("#colorPicker").spectrum("get").toRgbString();
+    lines.push([{x: event.clientX, y: event.clientY, color: ctx.strokeStyle, width: event.pressure ? event.pressure * 8 : 4}]);
     draw(event, pointer);
 }
 
 function pointerMove(event) {
     let pointer = pointerMap[event.pointerId];
     if (pointer) {
+        lines[lines.length - 1].push({x: event.clientX, y: event.clientY});
         draw(event, pointer);
     }
 }
 
 function pointerDelete(event) {
+    if(pointerMap[event.pointerId]){
+        let line = lines.pop();
+        lines.push(simplify(line, 0.5));
+    }
     Pointer.delete(event.pointerId);
 }
 
