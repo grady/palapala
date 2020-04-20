@@ -28,13 +28,15 @@ function init() {
     canvas.addEventListener('pointermove', pointerMove);
     canvas.addEventListener('pointerleave', pointerDelete);
     canvas.addEventListener('pointerup', pointerDelete);
-    ctx.lineJoin = "round";
+    lines = JSON.parse(window.localStorage.getItem("lines")) || [];
     setSize();  
 }
 
 function setSize() {
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
+    ctx.lineJoin = "round";
+    ctx.lineCap = "round";
     for(let i=0;i<lines.length;i++){
         drawLine(lines[i]);
     }
@@ -51,15 +53,20 @@ function draw(event, pointer) {
     pointer.pos0.y = pointer.pos1.y;
 }
 
-function drawLine(line, config){
-    ctx.save();
-    if(config && config.color) ctx.strokeStyle = config.color;
-    ctx.strokeStyle = line[0].color;
+function drawLine(line){
+    ctx.save();    
+    ctx.strokeStyle = line[0].strokeStyle;
     ctx.lineWidth = line[0].width;
     ctx.beginPath();
     ctx.moveTo(line[0].x, line[0].y);
     for (let i=1; i < line.length; i++){
         ctx.lineTo(line[i].x, line[i].y);
+        if(line[i].width !== line[i-1].width) {
+            ctx.stroke();
+            ctx.lineWidth = line[i].width;
+            ctx.beginPath();
+            ctx.moveTo(line[i].x, line[i].y);
+        }
     }
     ctx.stroke();
     ctx.restore();
@@ -68,14 +75,15 @@ function drawLine(line, config){
 function pointerDown(event) {
     let pointer = new Pointer(event.pointerId, event.clientX, event.clientY);
     ctx.strokeStyle = $("#colorPicker").spectrum("get").toRgbString();
-    lines.push([{x: event.clientX, y: event.clientY, color: ctx.strokeStyle, width: event.pressure ? event.pressure * 8 : 4}]);
+    lines.push([{x: event.clientX, y: event.clientY, strokeStyle: ctx.strokeStyle, width: event.pressure ? event.pressure * 8 : 4}]);
     draw(event, pointer);
 }
 
 function pointerMove(event) {
     let pointer = pointerMap[event.pointerId];
+    let scale = 4;
     if (pointer) {
-        lines[lines.length - 1].push({x: event.clientX, y: event.clientY});
+        lines[lines.length - 1].push({x: event.clientX, y: event.clientY, width: event.pressure?event.pressure*2*scale:scale});
         draw(event, pointer);
     }
 }
@@ -84,6 +92,7 @@ function pointerDelete(event) {
     if(pointerMap[event.pointerId]){
         let line = lines.pop();
         lines.push(simplify(line, 0.5));
+        window.localStorage.setItem("lines", JSON.stringify(lines));
     }
     Pointer.delete(event.pointerId);
 }
