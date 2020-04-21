@@ -12,13 +12,30 @@ canvas {
 .sp-dd {
     display:none;
 }
-.sp-replacer {
-    border-radius: 0.25rem !important;
-    margin-bottom: 5px;
+.sp-palette-container {
+    background-color: #6c757d;
+    border-color: black;
+}
+.sp-palette .sp-thumb-el{
+    border-color:black
 }
 .main-tools {
     position: absolute;
     top:50%;
     -ms-transform: translateY(-50%);
     transform: translateY(-50%);    
+}
+
+.main-tools label {
+    margin:0;
+}
+.color-picker {
+    padding:0;
+}
+input[type=range][orient=vertical]
+{
+    writing-mode: bt-lr; /* IE */
+    -webkit-appearance: slider-vertical; /* WebKit */
+    width: 8px;
+    height: 100px;
 }

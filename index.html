@@ -1,28 +1,41 @@
 <!doctype html>
 <html lang="en">
-
 <head>
   <meta charset="UTF-8" />
   <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css"
     integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/spectrum/1.8.0/spectrum.min.css"
     integrity="sha256-f83N12sqX/GO43Y7vXNt9MjrHkPc4yi9Uq9cLy1wGIU=" crossorigin="anonymous" />
-    <script src="https://kit.fontawesome.com/6a149e66fd.js" crossorigin="anonymous"></script>
+  <script src="https://kit.fontawesome.com/6a149e66fd.js" crossorigin="anonymous"></script>
   <script src="lib/simplify-js-1.2.4/simplify.js"></script>
   <link rel="stylesheet" href="css/base.css" />
 </head>
 
 <body>
   <div class="main-tools btn-group-vertical">
-    <input type='text' id="colorPicker" value="black" />
+    <label class="btn btn-secondary">
+      <span style="height:15px;width:15px;border-radius:50%;display:block;background-color:white;margin:auto;"></span>
+      <input type="range" id="sizeSlider" name="sizeSlider" orient="vertical" min="1" value="4" max="10">
+      <span style="height:5px;width:5px;border-radius:50%;display:block;background-color:white;margin:auto;"></span>
+    </label>      
+    <label class="btn btn-secondary color-picker">
+      <input type='text' id="colorPicker" value="black" />
+    </label>
     <div class="btn-group-vertical btn-group-toggle" data-toggle="buttons">
-    <label class="btn btn-secondary active"><input type="radio" name="tool" id="penButton" checked><i class="fas fa-pen"></i></label>
-    <label class="btn btn-secondary"><input type="radio" name="tool" id="eraseButton"><i class="fas fa-eraser"></i></label>
+      <label class="btn btn-secondary active">
+        <input type="radio" name="tool" value="pen" id="penButton" checked><i class="fas fa-pen"></i>
+      </label>
+      <label class="btn btn-secondary">
+        <input type="radio" name="tool" value= "eraser" id="eraseButton"><i class="fas fa-eraser"></i>
+      </label>
     </div>
     <button type="button" class="btn btn-secondary" id="clearButton"><i class="fas fa-times"></i></button>
   </div>
+  
+  
   <canvas id="canvas"></canvas>
 
+  
   <script src="https://code.jquery.com/jquery-3.4.1.slim.min.js"
     integrity="sha384-J6qa4849blE2+poT4WnyKhv5vZF5SrPo0iEjwBvKU7imGFAV0wwj1yYfoRSJoZ+n"
     crossorigin="anonymous"></script>
