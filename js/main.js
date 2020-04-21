@@ -83,31 +83,38 @@ function drawLine(line) {
 }
 
 function pointerDown(event) {
-    let pointer = new Pointer(event.pointerId, event.clientX, event.clientY);
+    let pointer = new Pointer(event.pointerId, event.clientX, event.clientY, $("input[name='tool']:checked").val());
     let scale = $("#sizeSlider").val();
+    if(pointer.mode === "pen"){
     ctx.strokeStyle = $("#colorPicker").spectrum("get").toRgbString();
     lines.push([{
         x: event.clientX, y: event.clientY, strokeStyle: ctx.strokeStyle,
         width: scale * (event.pressure ? event.pressure * 2 : 1)
     }]);
     draw(event, pointer);
+    }  else {
+        clearCircle({x: event.clientX, y: event.clientY}, 20);
+    }
 }
 
 function pointerMove(event) {
     let pointer = pointerMap[event.pointerId];
     let scale = $("#sizeSlider").val();
     if (pointer) {
-        lines[lines.length - 1].push({
-            x: event.clientX, y: event.clientY,
-            width: scale * (event.pressure ? event.pressure * 2 : 1)
-        });
-        draw(event, pointer);
+        if (pointer.mode === "pen"){
+            lines[lines.length - 1].push({
+                x: event.clientX, y: event.clientY,
+                width: scale * (event.pressure ? event.pressure * 2 : 1)
+            });
+            draw(event, pointer);
+        } else{
+            clearCircle({x: event.clientX, y: event.clientY}, 20);
+        }
     }
 }
 
 function pointerDelete(event) {
-    if (pointerMap[event.pointerId] &&
-        $("input[name='tool']:checked").val() === "pen") {
+    if (pointerMap[event.pointerID] && pointerMap[event.pointerId].mode === "pen") {
         let line = lines.pop();
         lines.push(simplify(line, 0.5));
         window.localStorage.setItem("lines", JSON.stringify(lines));
@@ -126,8 +133,9 @@ class Brush {
 }
 
 class Pointer {
-    constructor(id, x = -1, y = -1) {
+    constructor(id, x = -1, y = -1, mode) {
         this.id = id;
+        this.mode = mode;
         this.pos0 = { x: x, y: y };
         this.pos1 = { x: x, y: y };
         pointerMap[id] = this;
@@ -141,9 +149,11 @@ class Pointer {
     }
 }
 function clearCircle(pos, radius) {
+    ctx.save();
     ctx.beginPath();
     ctx.arc(pos.x, pos.y, radius, 0, 2 * Math.PI, false);
     ctx.clip();
     ctx.clearRect(pos.x - radius - 1, pos.y - radius - 1,
         radius * 2 + 2, radius * 2 + 2);
+    ctx.restore();
 };
