@@ -9,8 +9,12 @@ canvas {
     display: block;
     margin: auto;
 }
+.sp-dd {
+    display:none;
+}
 .sp-replacer {
-    background-color: aliceblue;
+    border-radius: 0.25rem !important;
+    margin-bottom: 5px;
 }
 .main-tools {
     position: absolute;

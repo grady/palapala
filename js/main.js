@@ -2,6 +2,8 @@
 
 //import simplify from "../lib/simplify-js-1.2.4/simplify";
 
+$(document).ready(init);
+
 $("#colorPicker").spectrum({
     preferredFormat: "hex",
     showPalette: true,
@@ -10,7 +12,7 @@ $("#colorPicker").spectrum({
     togglePaletteMoreText: '>',
     togglePaletteLessText: '<',
     palette: [["black"], ["red"], ["mediumseagreen"], ["mediumblue"], ["rebeccapurple"], ["darkorange"]],
-    replacerClassName: "sp-replacer btn bg-secondary",
+    replacerClassName: "sp-replacer btn btn-secondary bg-secondary",
 });
 
 let canvas;
@@ -18,9 +20,10 @@ let ctx;
 let pointerMap = {};
 let lines = [];
 
-window.addEventListener('load', init);
-window.addEventListener('resize', setSize);
+//window.addEventListener('load', init);
+//window.addEventListener('resize', setSize);
 function init() {
+    $(window).resize(setSize);   
     canvas = document.getElementById("canvas");
     ctx = canvas.getContext("2d", { desynchronized: true });
     canvas.addEventListener('pointerdown', pointerDown);

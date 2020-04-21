@@ -13,13 +13,12 @@
 </head>
 
 <body>
-  <div class="main-tools btn-group-vertical" data-toggle="buttons">
+  <div class="main-tools btn-group-vertical">
     <input type='text' id="colorPicker" value="black" />
-    <label class="btn btn-secondary active"><input type="radio" name="tool"  id="penButton" checked><i class="fas fa-pen"></i></label>
+    <div class="btn-group-vertical btn-group-toggle" data-toggle="buttons">
+    <label class="btn btn-secondary active"><input type="radio" name="tool" id="penButton" checked><i class="fas fa-pen"></i></label>
     <label class="btn btn-secondary"><input type="radio" name="tool" id="eraseButton"><i class="fas fa-eraser"></i></label>
-    <!-- <button type="button" class="btn btn-secondary" id="penButton"><i class="fas fa-pen"></i></button>
-    <button type="button" class="btn btn-secondary" id="eraseButton"><i class="fas fa-eraser"></i></button>
-    <button type="button" class="btn btn-secondary">3</button> -->
+    </div>
     <button type="button" class="btn btn-secondary" id="clearButton"><i class="fas fa-times"></i></button>
   </div>
   <canvas id="canvas"></canvas>
