@@ -10,5 +10,11 @@ canvas {
     margin: auto;
 }
 .sp-replacer {
-background-color: aliceblue;
+    background-color: aliceblue;
+}
+.main-tools {
+    position: absolute;
+    top:50%;
+    -ms-transform: translateY(-50%);
+    transform: translateY(-50%);    
 }

@@ -3,22 +3,24 @@
 
 <head>
   <meta charset="UTF-8" />
-  <link rel="stylesheet" href="css/base.css" />
   <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css"
     integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/spectrum/1.8.0/spectrum.min.css"
     integrity="sha256-f83N12sqX/GO43Y7vXNt9MjrHkPc4yi9Uq9cLy1wGIU=" crossorigin="anonymous" />
+    <script src="https://kit.fontawesome.com/6a149e66fd.js" crossorigin="anonymous"></script>
   <script src="lib/simplify-js-1.2.4/simplify.js"></script>
+  <link rel="stylesheet" href="css/base.css" />
 </head>
 
 <body>
-  <div class="btn-group-vertical"
-    style="position: absolute;top:50%;-ms-transform: translateY(-50%);transform: translateY(-50%);">
+  <div class="main-tools btn-group-vertical" data-toggle="buttons">
     <input type='text' id="colorPicker" value="black" />
-    <button type="button" class="btn btn-secondary">1</button>
-    <button type="button" class="btn btn-secondary">2</button>
-    <button type="button" class="btn btn-secondary">3</button>
-    <button type="button" class="btn btn-secondary">4</button>
+    <label class="btn btn-secondary active"><input type="radio" name="tool"  id="penButton" checked><i class="fas fa-pen"></i></label>
+    <label class="btn btn-secondary"><input type="radio" name="tool" id="eraseButton"><i class="fas fa-eraser"></i></label>
+    <!-- <button type="button" class="btn btn-secondary" id="penButton"><i class="fas fa-pen"></i></button>
+    <button type="button" class="btn btn-secondary" id="eraseButton"><i class="fas fa-eraser"></i></button>
+    <button type="button" class="btn btn-secondary">3</button> -->
+    <button type="button" class="btn btn-secondary" id="clearButton"><i class="fas fa-times"></i></button>
   </div>
   <canvas id="canvas"></canvas>
 

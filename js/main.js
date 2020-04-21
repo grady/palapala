@@ -10,7 +10,7 @@ $("#colorPicker").spectrum({
     togglePaletteMoreText: '>',
     togglePaletteLessText: '<',
     palette: [["black"], ["red"], ["mediumseagreen"], ["mediumblue"], ["rebeccapurple"], ["darkorange"]],
-    replacerClassName: "sp-replacer bg-secondary",
+    replacerClassName: "sp-replacer btn bg-secondary",
 });
 
 let canvas;
@@ -20,7 +20,6 @@ let lines = [];
 
 window.addEventListener('load', init);
 window.addEventListener('resize', setSize);
-
 function init() {
     canvas = document.getElementById("canvas");
     ctx = canvas.getContext("2d", { desynchronized: true });
@@ -29,7 +28,15 @@ function init() {
     canvas.addEventListener('pointerleave', pointerDelete);
     canvas.addEventListener('pointerup', pointerDelete);
     lines = JSON.parse(window.localStorage.getItem("lines")) || [];
-    setSize();  
+    setSize();
+    $("#clearButton").click(clearCanvas);
+}
+
+function clearCanvas() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    lines = [];
+    window.localStorage.removeItem("lines");
+
 }
 
 function setSize() {
@@ -37,7 +44,7 @@ function setSize() {
     canvas.height = window.innerHeight;
     ctx.lineJoin = "round";
     ctx.lineCap = "round";
-    for(let i=0;i<lines.length;i++){
+    for (let i = 0; i < lines.length; i++) {
         drawLine(lines[i]);
     }
 }
@@ -53,15 +60,15 @@ function draw(event, pointer) {
     pointer.pos0.y = pointer.pos1.y;
 }
 
-function drawLine(line){
-    ctx.save();    
+function drawLine(line) {
+    ctx.save();
     ctx.strokeStyle = line[0].strokeStyle;
     ctx.lineWidth = line[0].width;
     ctx.beginPath();
     ctx.moveTo(line[0].x, line[0].y);
-    for (let i=1; i < line.length; i++){
+    for (let i = 1; i < line.length; i++) {
         ctx.lineTo(line[i].x, line[i].y);
-        if(line[i].width !== line[i-1].width) {
+        if (line[i].width !== line[i - 1].width) {
             ctx.stroke();
             ctx.lineWidth = line[i].width;
             ctx.beginPath();
@@ -75,7 +82,7 @@ function drawLine(line){
 function pointerDown(event) {
     let pointer = new Pointer(event.pointerId, event.clientX, event.clientY);
     ctx.strokeStyle = $("#colorPicker").spectrum("get").toRgbString();
-    lines.push([{x: event.clientX, y: event.clientY, strokeStyle: ctx.strokeStyle, width: event.pressure ? event.pressure * 8 : 4}]);
+    lines.push([{ x: event.clientX, y: event.clientY, strokeStyle: ctx.strokeStyle, width: event.pressure ? event.pressure * 8 : 4 }]);
     draw(event, pointer);
 }
 
@@ -83,13 +90,13 @@ function pointerMove(event) {
     let pointer = pointerMap[event.pointerId];
     let scale = 4;
     if (pointer) {
-        lines[lines.length - 1].push({x: event.clientX, y: event.clientY, width: event.pressure?event.pressure*2*scale:scale});
+        lines[lines.length - 1].push({ x: event.clientX, y: event.clientY, width: event.pressure ? event.pressure * 2 * scale : scale });
         draw(event, pointer);
     }
 }
 
 function pointerDelete(event) {
-    if(pointerMap[event.pointerId]){
+    if (pointerMap[event.pointerId]) {
         let line = lines.pop();
         lines.push(simplify(line, 0.5));
         window.localStorage.setItem("lines", JSON.stringify(lines));
