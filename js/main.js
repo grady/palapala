@@ -117,11 +117,9 @@ function pointerMove(event) {
 }
 
 function pointerDelete(event) {
-
     if (pointerMap[event.pointerId]){
-        console.log("innter");
         if(pointerMap[event.pointerId].mode === "pen") {      
-       
+            //console.log(pointerMap[event.pointerId]);
             lines.push(simplify(lines.pop(), 0.5));
             window.localStorage.setItem("lines", JSON.stringify(lines));
         }
