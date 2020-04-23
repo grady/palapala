@@ -25,13 +25,16 @@ let lines = [];
 function init() {
     canvas = document.getElementById("canvas");
     ctx = canvas.getContext("2d", { desynchronized: true });
+
     canvas.addEventListener('pointerdown', pointerDown);
     canvas.addEventListener('pointermove', pointerMove);
     canvas.addEventListener('pointerleave', pointerDelete);
     canvas.addEventListener('pointerup', pointerDelete);
+
     lines = JSON.parse(window.localStorage.getItem("lines")) || [];
     $(window).resize(setSize);
     setSize();
+
     $("#clearButton").click(clearCanvas);
 }
 
@@ -114,10 +117,14 @@ function pointerMove(event) {
 }
 
 function pointerDelete(event) {
-    if (pointerMap[event.pointerID] && pointerMap[event.pointerId].mode === "pen") {
-        let line = lines.pop();
-        lines.push(simplify(line, 0.5));
-        window.localStorage.setItem("lines", JSON.stringify(lines));
+
+    if (pointerMap[event.pointerId]){
+        console.log("innter");
+        if(pointerMap[event.pointerId].mode === "pen") {      
+       
+            lines.push(simplify(lines.pop(), 0.5));
+            window.localStorage.setItem("lines", JSON.stringify(lines));
+        }
     }
     Pointer.delete(event.pointerId);
 }
