@@ -58,7 +58,8 @@ function setSize() {
 
 function draw(event, pointer) {
     pointer.setPos(event);
-    ctx.lineWidth = $("#sizeSlider").val() * (event.pressure ? event.pressure * 2 : 1);
+    let newWidth = $("#sizeSlider").val() * (event.pressure * 3 || 1);
+    ctx.lineWidth *= (newWidth + 20)/(ctx.lineWidth+20);
     ctx.beginPath();
     ctx.moveTo(pointer.pos0.x, pointer.pos0.y);
     ctx.lineTo(pointer.pos1.x, pointer.pos1.y);
@@ -87,17 +88,17 @@ function drawLine(line) {
 }
 
 function pointerDown(event) {
-    let pointer = new Pointer(event.pointerId, event.clientX, event.clientY, $("input[name='tool']:checked").val());
+    let pointer = new Pointer(event);
     let scale = $("#sizeSlider").val();
     if(pointer.mode === "pen"){
     ctx.strokeStyle = $("#colorPicker").spectrum("get").toRgbString();
     lines.push([{
         x: event.clientX, y: event.clientY, strokeStyle: ctx.strokeStyle,
-        width: scale * (event.pressure ? event.pressure * 2 : 1)
+        width: scale * (event.pressure * 3 || 1)
     }]);
     draw(event, pointer);
     }  else {
-        clearCircle({x: event.clientX, y: event.clientY}, 20);
+        clearCircle({x: event.clientX, y: event.clientY}, $("#sizeSlider").val()*5);
     }
 }
 
@@ -108,11 +109,11 @@ function pointerMove(event) {
         if (pointer.mode === "pen"){
             lines[lines.length - 1].push({
                 x: event.clientX, y: event.clientY,
-                width: scale * (event.pressure ? event.pressure * 2 : 1)
+                width: scale * (event.pressure * 3 || 1)
             });
             draw(event, pointer);
         } else{
-            clearCircle({x: event.clientX, y: event.clientY}, 20);
+            clearCircle({x: event.clientX, y: event.clientY}, $("#sizeSlider").val()*5);
         }
     }
 }
@@ -129,16 +130,18 @@ function pointerDelete(event) {
 }
 
 class Pointer {
-    constructor(id, x = -1, y = -1, mode) {
-        this.id = id;
-        this.mode = mode;
-        this.pos0 = { x: x, y: y };
-        this.pos1 = { x: x, y: y };
-        pointerMap[id] = this;
+    constructor(event) {
+        this.id = event.pointerId;
+        this.mode = $("input[name='tool']:checked").val();
+        this.scale = $("#sizeSlider").val();
+        this.pos0 = { x: event.clientX, y: event.clientY, pressure: event.pressure || 1};
+        this.pos1 = { x: this.pos0.x, y: this.pos0.y , pressure: this.pos0.pressure};
+        pointerMap[this.id] = this;
     }
     setPos(event) {
         this.pos1.x = event.clientX;
         this.pos1.y = event.clientY;
+        this.pos1.pressure = event.pressure || 1;
     }
     static delete(id) {
         delete pointerMap[id];
