@@ -4,38 +4,39 @@
 
 $(document).ready(init);
 
-$("#colorPicker").spectrum({
-    preferredFormat: "hex",
-    showPalette: true,
-    showPaletteOnly: true,
-    togglePaletteOnly: true,
-    togglePaletteMoreText: '>',
-    togglePaletteLessText: '<',
-    palette: [["black", "red"], ["mediumseagreen", "mediumblue"], ["mediumorchid", "darkorange"]],
-    replacerClassName: "sp-replacer btn btn-secondary bg-secondary",
-});
 
 let canvas;
 let ctx;
-let pointerMap = {};
+const pointerMap = {};
 let lines = [];
 
-//window.addEventListener('load', init);
-//window.addEventListener('resize', setSize);
 function init() {
     canvas = document.getElementById("canvas");
-    ctx = canvas.getContext("2d", { desynchronized: true });
+    ctx = canvas.getContext("2d", { desynchronized: false });
 
-    canvas.addEventListener('pointerdown', pointerDown);
-    canvas.addEventListener('pointermove', pointerMove);
-    canvas.addEventListener('pointerleave', pointerDelete);
-    canvas.addEventListener('pointerup', pointerDelete);
+    canvas.addEventListener("pointerdown", pointerDown);
+    canvas.addEventListener("pointermove", pointerMove);
+    canvas.addEventListener("pointerleave", pointerDelete);
+    canvas.addEventListener("pointerup", pointerDelete);
 
     lines = JSON.parse(window.localStorage.getItem("lines")) || [];
     $(window).resize(setSize);
     setSize();
 
     $("#clearButton").click(clearCanvas);
+    $("#colorPicker").spectrum({
+        preferredFormat: "hex",
+        showPalette: true,
+        showPaletteOnly: true,
+        togglePaletteOnly: true,
+        togglePaletteMoreText: ">",
+        togglePaletteLessText: "<",
+        palette: [["black", "red"],
+                  ["mediumseagreen", "mediumblue"],
+                  ["mediumorchid", "darkorange"]],
+        replacerClassName: "sp-replacer btn btn-secondary bg-secondary"
+    });
+    
 }
 
 function clearCanvas() {
@@ -74,7 +75,7 @@ function drawLine(line) {
     ctx.moveTo(line[0].x, line[0].y);
     for (let i = 1; i < line.length; i++) {
         ctx.lineTo(line[i].x, line[i].y);
-        if (line[i].width !== line[i - 1].width) {
+        if(line[i].width !== line[i - 1].width){
             ctx.stroke();
             ctx.lineWidth = line[i].width;
             ctx.beginPath();
@@ -118,23 +119,13 @@ function pointerMove(event) {
 
 function pointerDelete(event) {
     if (pointerMap[event.pointerId]){
-        if(pointerMap[event.pointerId].mode === "pen") {      
+        if(pointerMap[event.pointerId].mode === "pen"){
             //console.log(pointerMap[event.pointerId]);
             lines.push(simplify(lines.pop(), 0.5));
             window.localStorage.setItem("lines", JSON.stringify(lines));
         }
     }
     Pointer.delete(event.pointerId);
-}
-
-class Brush {
-
-    constructor() {
-
-    }
-    setMode() {
-
-    }
 }
 
 class Pointer {
