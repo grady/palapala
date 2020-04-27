@@ -7,6 +7,8 @@ $(document).ready(init);
 
 let canvas;
 let ctx;
+let conn;
+let doc;
 const pointerMap = {};
 let lines = [];
 
@@ -36,7 +38,10 @@ function init() {
                   ["mediumorchid", "darkorange"]],
         replacerClassName: "sp-replacer btn btn-secondary bg-secondary"
     });
-    
+    conn = socket();
+    doc = conn.get('test', 'foo');
+    doc.on('load', function(){lines = doc.data.lines;setSize();});
+    doc.subscribe();
 }
 
 function clearCanvas() {
