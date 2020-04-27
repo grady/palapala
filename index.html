@@ -1,9 +1,15 @@
 <!doctype html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8" />
-  <link rel="stylesheet" href="lib/bootstrap/dist/css/bootstrap.min.css"/>
-  <link rel="stylesheet" href="lib/spectrum-colorpicker/spectrum.css"/>
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+  <meta name="application-name" content="Palapala">
+
+  <link rel="stylesheet" href="lib/bootstrap/dist/css/bootstrap.min.css" />
+  <link rel="stylesheet" href="lib/spectrum-colorpicker/spectrum.css" />
   <script src="https://kit.fontawesome.com/6a149e66fd.js" crossorigin="anonymous"></script>
   <script src="lib/simplify-js/simplify.js"></script>
   <link rel="stylesheet" href="css/base.css" />
@@ -15,7 +21,7 @@
       <span style="height:15px;width:15px;border-radius:50%;display:block;background-color:white;margin:auto;"></span>
       <input type="range" id="sizeSlider" name="sizeSlider" orient="vertical" min="1" value="4" max="20">
       <span style="height:5px;width:5px;border-radius:50%;display:block;background-color:white;margin:auto;"></span>
-    </label>      
+    </label>
     <label class="btn btn-secondary color-picker">
       <input type='text' id="colorPicker" value="black" />
     </label>
@@ -24,13 +30,13 @@
         <input type="radio" name="tool" value="pen" id="penButton" checked><i class="fas fa-pen"></i>
       </label>
       <label class="btn btn-secondary">
-        <input type="radio" name="tool" value= "eraser" id="eraseButton"><i class="fas fa-eraser"></i>
+        <input type="radio" name="tool" value="eraser" id="eraseButton"><i class="fas fa-eraser"></i>
       </label>
     </div>
     <button type="button" class="btn btn-secondary" id="clearButton"><i class="fas fa-times"></i></button>
   </div>
-  
-  
+
+
   <canvas id="canvas"></canvas>
 
   <script src="lib/jquery/dist/jquery.slim.min.js"></script>
