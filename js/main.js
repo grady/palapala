@@ -6,33 +6,41 @@ $(document).ready(init);
 
 let canvas;
 let ctx;
-let pointerMap = {};
+let conn;
+let doc;
+const pointerMap = {};
 let lines = [];
 
-//window.addEventListener('load', init);
-//window.addEventListener('resize', setSize);
 function init() {
-  canvas = document.getElementById("canvas");
-  ctx = canvas.getContext("2d", { desynchronized: true });
-  lines = JSON.parse(window.localStorage.getItem("lines")) || [];  
-  setSize();    
-  canvas.addEventListener('pointerdown', pointerDown);
-  canvas.addEventListener('pointermove', pointerMove);
-  canvas.addEventListener('pointerleave', pointerDelete);
-  canvas.addEventListener('pointerup', pointerDelete);
+    canvas = document.getElementById("canvas");
+    ctx = canvas.getContext("2d", { desynchronized: false });
 
-  $(window).resize(setSize);
-  $("#clearButton").click(clearCanvas);
-  $("#colorPicker").spectrum({
-    preferredFormat: "hex",
-    showPalette: true,
-    showPaletteOnly: true,
-    togglePaletteOnly: true,
-    togglePaletteMoreText: '>',
-    togglePaletteLessText: '<',
-    palette: [["black", "red"], ["mediumseagreen", "mediumblue"], ["mediumorchid", "darkorange"]],
-    replacerClassName: "sp-replacer btn btn-secondary bg-secondary",
-  });
+    canvas.addEventListener("pointerdown", pointerDown);
+    canvas.addEventListener("pointermove", pointerMove);
+    canvas.addEventListener("pointerleave", pointerDelete);
+    canvas.addEventListener("pointerup", pointerDelete);
+
+    lines = JSON.parse(window.localStorage.getItem("lines")) || [];
+    $(window).resize(setSize);
+    setSize();
+
+    $("#clearButton").click(clearCanvas);
+    $("#colorPicker").spectrum({
+        preferredFormat: "hex",
+        showPalette: true,
+        showPaletteOnly: true,
+        togglePaletteOnly: true,
+        togglePaletteMoreText: ">",
+        togglePaletteLessText: "<",
+        palette: [["black", "red"],
+                  ["mediumseagreen", "mediumblue"],
+                  ["mediumorchid", "darkorange"]],
+        replacerClassName: "sp-replacer btn btn-secondary bg-secondary"
+    });
+    conn = socket();
+    doc = conn.get('test', 'foo');
+    doc.on('load', function(){lines = doc.data.lines;setSize();});
+    doc.subscribe();
 }
 
 function clearCanvas() {
@@ -52,29 +60,31 @@ function setSize() {
 }
 
 function draw(event, pointer) {
-  pointer.setPos(event);
-  ctx.lineWidth = $("#sizeSlider").val() * (event.pressure ? event.pressure * 2 : 1);
-  ctx.beginPath();
-  ctx.moveTo(pointer.pos0.x, pointer.pos0.y);
-  ctx.lineTo(pointer.pos1.x, pointer.pos1.y);
-  ctx.stroke();
-  pointer.pos0.x = pointer.pos1.x;
-  pointer.pos0.y = pointer.pos1.y;
+    pointer.setPos(event);
+    let newWidth = $("#sizeSlider").val() * (event.pressure * 3 || 1);
+    ctx.lineWidth *= (newWidth + 20)/(ctx.lineWidth+20);
+    ctx.beginPath();
+    ctx.moveTo(pointer.pos0.x, pointer.pos0.y);
+    ctx.lineTo(pointer.pos1.x, pointer.pos1.y);
+    ctx.stroke();
+    pointer.pos0.x = pointer.pos1.x;
+    pointer.pos0.y = pointer.pos1.y;
 }
 
 function drawLine(line) {
-  ctx.save();
-  ctx.strokeStyle = line[0].strokeStyle;
-  ctx.lineWidth = line[0].width;
-  ctx.beginPath();
-  ctx.moveTo(line[0].x, line[0].y);
-  for (let i = 1; i < line.length; i++) {
-    ctx.lineTo(line[i].x, line[i].y);
-    if (line[i].width !== line[i - 1].width) {
-      ctx.stroke();
-      ctx.lineWidth = line[i].width;
-      ctx.beginPath();
-      ctx.moveTo(line[i].x, line[i].y);
+    ctx.save();
+    ctx.strokeStyle = line[0].strokeStyle;
+    ctx.lineWidth = line[0].width;
+    ctx.beginPath();
+    ctx.moveTo(line[0].x, line[0].y);
+    for (let i = 1; i < line.length; i++) {
+        ctx.lineTo(line[i].x, line[i].y);
+        if(line[i].width !== line[i - 1].width){
+            ctx.stroke();
+            ctx.lineWidth = line[i].width;
+            ctx.beginPath();
+            ctx.moveTo(line[i].x, line[i].y);
+        }
     }
   }
   ctx.stroke();
@@ -82,78 +92,67 @@ function drawLine(line) {
 }
 
 function pointerDown(event) {
-  let pointer = new Pointer(event.pointerId, event.clientX, event.clientY, $("input[name='tool']:checked").val());
-  let scale = $("#sizeSlider").val();
-  if (pointer.mode === "pen") {
+    let pointer = new Pointer(event);
+    let scale = $("#sizeSlider").val();
+    if(pointer.mode === "pen"){
     ctx.strokeStyle = $("#colorPicker").spectrum("get").toRgbString();
     lines.push([{
-      x: event.clientX, y: event.clientY, strokeStyle: ctx.strokeStyle,
-      width: getWidth(event)
+        x: event.clientX, y: event.clientY, strokeStyle: ctx.strokeStyle,
+        width: scale * (event.pressure * 3 || 1)
     }]);
     draw(event, pointer);
-  } else {
-    clearCircle({ x: event.clientX, y: event.clientY }, $("#sizeSlider").val() * 2);
-  }
-}
-
-function getWidth(event) {
-  return $("#sizeSlider").val() * (event.pressure ? event.pressure * 2 : 1)
+    }  else {
+        clearCircle({x: event.clientX, y: event.clientY}, $("#sizeSlider").val()*5);
+    }
 }
 
 function pointerMove(event) {
-  let pointer = pointerMap[event.pointerId];
-  if (pointer) {
-    if (pointer.mode === "pen") {
-      lines[lines.length - 1].push({
-        x: event.clientX, y: event.clientY,
-        width: getWidth(event)
-      });
-      draw(event, pointer);
-    } else {
-      clearCircle({ x: event.clientX, y: event.clientY }, $("#sizeSlider").val() * 2);
+    let pointer = pointerMap[event.pointerId];
+    let scale = $("#sizeSlider").val();
+    if (pointer) {
+        if (pointer.mode === "pen"){
+            lines[lines.length - 1].push({
+                x: event.clientX, y: event.clientY,
+                width: scale * (event.pressure * 3 || 1)
+            });
+            draw(event, pointer);
+        } else{
+            clearCircle({x: event.clientX, y: event.clientY}, $("#sizeSlider").val()*5);
+        }
     }
   }
 }
 
 function pointerDelete(event) {
-  let pointer = pointerMap[event.pointerID];
-  if (pointer) {
-    switch (pointer.mode) {
-      case "erase":
-        break;
-      default:
-        lines.push(simplify(lines.pop(), 0.5));
+    if (pointerMap[event.pointerId]){
+        if(pointerMap[event.pointerId].mode === "pen"){
+            //console.log(pointerMap[event.pointerId]);
+            lines.push(simplify(lines.pop(), 0.5));
+            window.localStorage.setItem("lines", JSON.stringify(lines));
+        }
     }
   }
   window.localStorage.setItem("lines", JSON.stringify(lines));
   Pointer.delete(event.pointerId);
 }
 
-class Brush {
-
-  constructor() {
-
-  }
-  setMode() {
-
-  }
-}
-
 class Pointer {
-  constructor(id, x = -1, y = -1, mode) {
-    this.id = id;
-    this.mode = mode;
-    this.pos0 = { x: x, y: y };
-    this.pos1 = { x: x, y: y };
-    pointerMap[id] = this;
-  }
-  setPos(event) {
-    this.pos1.x = event.clientX;
-    this.pos1.y = event.clientY;
-  }
-  static delete(id) {
-    delete pointerMap[id];
-  }
+    constructor(event) {
+        this.id = event.pointerId;
+        this.mode = $("input[name='tool']:checked").val();
+        this.scale = $("#sizeSlider").val();
+        this.pos0 = { x: event.clientX, y: event.clientY, pressure: event.pressure || 1};
+        this.pos1 = { x: this.pos0.x, y: this.pos0.y , pressure: this.pos0.pressure};
+        pointerMap[this.id] = this;
+    }
+    setPos(event) {
+        this.pos1.x = event.clientX;
+        this.pos1.y = event.clientY;
+        this.pos1.pressure = event.pressure || 1;
+    }
+    static delete(id) {
+        delete pointerMap[id];
+    }
 }
 
 function clearCircle(pos, radius) {
