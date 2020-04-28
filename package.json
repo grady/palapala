@@ -8,7 +8,8 @@
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "browserify js/client-db.js -o js/browser.js"
+    "build": "browserify js/client-db.js -o js/browser.js",
+    "start": "nodemon js/server.js"
   },
   "repository": {
     "type": "git",
@@ -36,5 +37,9 @@
     "spectrum-colorpicker": "^1.8.0",
     "websocket-json-stream": "0.0.3",
     "ws": "^7.2.3"
+  },
+  "devDependencies": {
+    "browserify": "^16.5.1",
+    "nodemon": "^2.0.3"
   }
 }
