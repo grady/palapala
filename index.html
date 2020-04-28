@@ -10,9 +10,10 @@
 
   <link rel="stylesheet" href="lib/bootstrap/dist/css/bootstrap.min.css" />
   <link rel="stylesheet" href="lib/spectrum-colorpicker/spectrum.css" />
-  <script src="https://kit.fontawesome.com/6a149e66fd.js" crossorigin="anonymous"></script>
-  <script src="lib/simplify-js/simplify.js"></script>
+  <!-- <script src="lib/simplify-js/simplify.js"></script> -->
   <link rel="stylesheet" href="css/base.css" />
+  <script>window.globals={};</script>
+
 </head>
 
 <body>
@@ -37,14 +38,17 @@
   </div>
 
 
-  <canvas id="canvas"></canvas>
+  <canvas id="canvas" data-paper-resize></canvas>
 
   <script src="lib/jquery/dist/jquery.slim.min.js"></script>
   <script src="lib/spectrum-colorpicker/spectrum.js"></script>
   <script src="lib/popper.js/dist/umd/popper.min.js"></script>
   <script src="lib/bootstrap/dist/js/bootstrap.min.js"></script>
+  <script src="lib/paper/dist/paper-full.js"></script>  
   <script src="js/browser.js"></script>
-  <script src="js/main.js"></script>
+  <script type="text/paperscript" src="js/canvas.js" canvas="canvas"></script>
+  <script src="https://kit.fontawesome.com/6a149e66fd.js" crossorigin="anonymous"></script>
+  <!-- <script src="js/main.js"></script> -->
 </body>
 
 </html>
