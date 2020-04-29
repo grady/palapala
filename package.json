@@ -36,6 +36,7 @@
     "sharedb-mongo": "^1.0.0-beta.13",
     "simplify-js": "^1.2.4",
     "spectrum-colorpicker": "^1.8.0",
+    "uuid": "^7.0.3",
     "websocket-json-stream": "0.0.3",
     "ws": "^7.2.3"
   },
