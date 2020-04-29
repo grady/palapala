@@ -29,7 +29,9 @@ function init() {
     project.currentStyle.strokeColor = $("#colorPicker").spectrum("get").toHexString();
     project.currentStyle.strokeWidth = $("#sizeSlider").val();
     project.currentStyle.strokeCap = "round";
+    penTool.activate();
 }
+
 
 function activateTool(name) {
     tools.forEach(function (tool) {
@@ -40,66 +42,61 @@ function activateTool(name) {
     });
 }
 
-const penTool = new paper.Tool();
-penTool.name = "pen";
-penTool.path = null;
-penTool.onMouseDown = function (event) {
-    penTool.path = new Path({
-        //        strokeColor: $("#colorPicker").spectrum("get").toRgbString(),
-        //        strokeWidth: getWidth(event),
-        //strokeCap: "round"
-    });
-};
-
-penTool.onMouseDrag = function (event) {
-    if (penTool.path) penTool.path.add(event.point);
-};
-
-penTool.onMouseUp = function (event) {
-    penTool.path.simplify();
-    if (penTool.path.segments.length === 0) {
-        penTool.path = new Path.Circle({
-            center: event.point,
-            radius: penTool.path.strokeWidth / 2,
-            strokeWidth: null,
-            fillColor: penTool.path.strokeColor
-        });
+const penTool = new paper.Tool({
+    name: "pen",
+    path: null,
+    onMouseDown: function (event) {
+        penTool.path = new Path();
+    },
+    onMouseDrag: function (event) {
+        if (penTool.path) penTool.path.add(event.point);
+    },
+    onMouseUp: function (event) {
+        penTool.path.simplify();
+        if (penTool.path.segments.length === 0) {
+            penTool.path = new Path.Circle({
+                center: event.point,
+                radius: penTool.path.strokeWidth / 2,
+                strokeWidth: null,
+                fillColor: penTool.path.strokeColor
+            });
+        }
+        penTool.path = null;
     }
-    penTool.path = null;
-};
+});
 
-penTool.activate();
 
-const eraseTool = new paper.Tool();
-eraseTool.name = "erase";
-eraseTool.path = null;
-eraseTool.onMouseDown = function (event) {
-    eraseTool.path = new Path({ strokeWidth: getWidth(event) * 3, strokeCap: "round", strokeColor: "white" });
-};
-eraseTool.onMouseDrag = function (event) {
-    if (eraseTool.path) eraseTool.path.add(event.point);
-};
-eraseTool.onMouseUp = function (event) {
-    if (eraseTool.path) {
-        //project.activeLayer.children.forEach(item => item.subtract(eraseTool.path));
-        //eraseTool.path.remove();
+
+const eraseTool = new paper.Tool({
+    name: "erase",
+    path: null,
+    onMouseDown: function (event) {
+        eraseTool.path = new Path({ strokeWidth: getWidth(event) * 3, strokeCap: "round", strokeColor: "white" });
+    },
+    onMouseDrag: function (event) {
+        if (eraseTool.path) eraseTool.path.add(event.point);
+    },
+    onMouseUp: function (event) {
+        if (eraseTool.path) {
+            //project.activeLayer.children.forEach(item => item.subtract(eraseTool.path));
+            //eraseTool.path.remove();
+        }
+        eraseTool.path = null;
     }
-    eraseTool.path = null;
-    //delete pointerMove[event.pointerId];
-};
+});
 
 const circleTool = new Tool({
     name: "circle",
     path: null,
-    onMouseDown: function(event){
+    onMouseDown: function (event) {
         circleTool.path = new Path.Circle(event.point, 10);
     },
-    onMouseDrag: function(event){
+    onMouseDrag: function (event) {
         let path = circleTool.path;
         let radius = (event.point - event.downPoint).length;
-        if(radius > 1) path.scale(radius/(path.firstSegment.point - path.bounds.center).length);
+        if (radius > 1) path.scale(radius / (path.firstSegment.point - path.bounds.center).length);
     },
-    onMouseUp: function(event){
+    onMouseUp: function (event) {
         circleTool.path = null;
     }
 });
@@ -109,6 +106,17 @@ function getWidth(event) {
     var size = $("#sizeSlider").val()
     return size * (event.pressure * 3 || 1);
 }
+
+const lineTool = new Tool({
+    name: "line",
+    path: null,
+    onMouseDown: event => lineTool.path = new Path([event.point, event.point]),
+    onMouseDrag: function(event){
+        lineTool.path.lastSegment.point.set(event.point);
+        lineTool.path.firstSegment.point.set(event.modifiers.shift ? event.downPoint - (event.point - event.downPoint): event.downPoint);
+    },
+    onMouseUp: event => lineTool.path = null
+});
 
 // function onMouseDown(event) {
 //     if ($("input[name='tool']:checked").val() === "pen") {
