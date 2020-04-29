@@ -34,7 +34,6 @@ canvas[data-paper-resize]{
     -ms-transform: translateY(-50%);
     transform: translateY(-50%);    
 }
-
 .main-tools label {
     margin:0;
 }
@@ -47,4 +46,12 @@ input[type=range][orient=vertical]
     -webkit-appearance: slider-vertical; /* WebKit */
     width: 8px;
     height: 100px;
+}
+#clearConfirm{
+    padding: 0;
+    border: 0;
+    margin-left: -1px;
+    min-width: 0;
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
 }

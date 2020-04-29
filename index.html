@@ -32,11 +32,14 @@
       <label class="btn btn-secondary active">
         <input type="radio" name="tool" value="pen" checked><i class="fas fa-pen"></i>
       </label>
-      <label class="btn btn-secondary active">
+      <label class="btn btn-secondary ">
         <input type="radio" name="tool" value="line"><i class="fas fa-slash"></i>
       </label>
       <label class="btn btn-secondary">
         <input type="radio" name="tool" value="erase"><i class="fas fa-eraser"></i>
+      </label>
+      <label class="btn btn-secondary">
+        <input type="radio" name="tool" value="highlight"><i class="fas fa-highlighter"></i>
       </label>
       <label class="btn btn-secondary">
         <input type="radio" name="tool" value="circle"><i class="far fa-circle"></i>
@@ -48,7 +51,15 @@
         <input type="radio" name="tool" value="axes"><i class="fas fa-plus"></i>
       </label>
     </div>
-    <button type="button" class="btn btn-secondary" id="clearButton"><i class="fas fa-trash"></i></button>
+    <div class="btn-group dropright">
+      <button type="button" class="btn btn-secondary" data-toggle="dropdown">
+        <i class="fas fa-trash"></i>
+      </button>
+      <div class="dropdown-menu" id="clearConfirm">
+        <button type="button" class="btn btn-secondary" id="clearButton"
+          style="border-top-left-radius: 0;border-bottom-left-radius: 0;"><i class="fas fa-check"></i></button>
+      </div>
+    </div>
   </div>
 
 
