@@ -23,6 +23,8 @@
       <input type="range" id="sizeSlider" name="sizeSlider" orient="vertical" min="1" value="4" max="20">
       <span style="height:5px;width:5px;border-radius:50%;display:block;background-color:white;margin:auto;"></span>
     </label>
+    <button type="button" class="btn btn-secondary" id="undoButton"><i class="fas fa-undo"></i></button>
+    <button type="button" class="btn btn-secondary" id="redoButton" disabled><i class="fas fa-redo"></i></button>
     <label class="btn btn-secondary color-picker">
       <input type='text' id="colorPicker" value="black" />
     </label>
@@ -31,7 +33,7 @@
         <input type="radio" name="tool" value="pen" checked><i class="fas fa-pen"></i>
       </label>
       <label class="btn btn-secondary active">
-        <input type="radio" name="tool" value="line"><i class="fas fa-minus"></i>
+        <input type="radio" name="tool" value="line"><i class="fas fa-slash"></i>
       </label>
       <label class="btn btn-secondary">
         <input type="radio" name="tool" value="erase"><i class="fas fa-eraser"></i>
@@ -46,7 +48,7 @@
         <input type="radio" name="tool" value="axes"><i class="fas fa-plus"></i>
       </label>
     </div>
-    <button type="button" class="btn btn-secondary" id="clearButton"><i class="fas fa-times"></i></button>
+    <button type="button" class="btn btn-secondary" id="clearButton"><i class="fas fa-trash"></i></button>
   </div>
 
 
