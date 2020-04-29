@@ -25,6 +25,9 @@ canvas[data-paper-resize]{
 .sp-palette .sp-thumb-el{
     border-color:black
 }
+.sp-preview{
+    margin: 0;
+}
 .main-tools {
     position: absolute;
     top:50%;
