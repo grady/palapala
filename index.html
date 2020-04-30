@@ -50,6 +50,9 @@
       <label class="btn btn-secondary">
         <input type="radio" name="tool" value="axes"><i class="fas fa-plus"></i>
       </label>
+      <label class="btn btn-secondary">
+        <input type="radio" name="tool" value="desmos"><i class="fas fa-calculator"></i>
+      </label>
     </div>
     <div class="btn-group dropright">
       <button type="button" class="btn btn-secondary" data-toggle="dropdown">
@@ -62,7 +65,7 @@
     </div>
   </div>
 
-
+  <div id="desmos" style="position:absolute;display:none"></div>
   <canvas id="canvas" data-paper-resize></canvas>
 
   <script src="lib/jquery/dist/jquery.slim.min.js"></script>
@@ -74,6 +77,7 @@
   <script src="js/browser.js"></script>
   <script type="text/paperscript" src="js/canvas.js" canvas="canvas"></script>
   <script src="https://kit.fontawesome.com/6a149e66fd.js" crossorigin="anonymous"></script>
+  <script src="https://www.desmos.com/api/v1.5/calculator.js?apiKey=dcb31709b452b1cf9dc26972add0fda6"></script>
   <!-- <script src="js/main.js"></script> -->
 </body>
 

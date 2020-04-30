@@ -21,8 +21,8 @@ function init() {
     });
 
     $("#clearButton").click(event => project.clear());
-    //$("input[name=tool]").click(event => activateTool(event.target.value));
-    $("input[name=tool]").click(event => tools.find(tool => tool.name == event.target.value).activate());
+    $("input[name=tool]").click(event => activateTool(event.target.value));
+    //$("input[name=tool]").click(event => tools.find(tool => tool.name == event.target.value).activate());
 
     $("#sizeSlider").change(event => project.currentStyle.strokeWidth = event.target.value);
     $("#undoButton").click(undo);
@@ -37,14 +37,10 @@ function init() {
 }
 
 
-// function activateTool(name) {
-//     tools.forEach(function (tool) {
-//         if (tool.name === name) {
-//             console.log("Activating: " + tool.name);
-//             tool.activate();
-//         }
-//     });
-// }
+function activateTool(name) {
+    tools.find(tool => tool.name === name).activate();
+    desmosTool.desmos.css("z-index", name==="desmos" ? 1 : -1);
+}
 
 const penTool = new paper.Tool({
     name: "pen",
@@ -164,6 +160,35 @@ const axesTool = new Tool({
         yaxis.lastSegment.point.y = event.modifiers.shift ? mirror.y : event.downPoint.y;
     },
     onMouseUp: event => axesTool.path = null
+});
+
+const desmosTool = new Tool({
+    name: "desmos",
+    desmos: $("#desmos"),
+    calc: null, 
+    path: null,
+    onMouseDown: function(event){
+        desmosTool.path = new Shape.Rectangle(event.point, event.point);
+        desmosTool.path.strokeWidth = 1;
+    },
+    onMouseDrag: function(event){
+        desmosTool.path.size.set(event.point - event.downPoint);
+        desmosTool.path.position.set((event.downPoint + event.point) / 2);
+    },
+    onMouseUp: function(event){
+        //    debugger;
+        desmosTool.path.remove();
+        desmosTool.path = null;
+        let rect = new Rectangle(event.downPoint, event.point);
+        desmosTool.desmos.css({
+            display: "inherit",
+            left: rect.left + 'px',
+            top: rect.top + 'px',
+            width: rect.width,
+            height: rect.height,
+        });
+        if(!desmosTool.calc) desmosTool.calc = Desmos.GraphingCalculator(desmosTool.desmos[0]);
+    }
 });
 
 function undo(event) {
