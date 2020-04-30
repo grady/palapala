@@ -1,6 +1,6 @@
-global.socket = function(){
+globals.socket = function(){
   let ReconnectingWebSocket = require('reconnecting-websocket');
-  let sharedb = require('sharedb/lib/client');
+  let ShareDb = require('sharedb/lib/client');
   let socket = new ReconnectingWebSocket("ws://localhost:8080");
-  return new sharedb.Connection(socket);
+  return new ShareDb.Connection(socket);
 }

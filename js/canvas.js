@@ -34,6 +34,7 @@ function init() {
     penTool.activate();
 
     globals.paper = paper;
+    console.log(globals.socket);
 }
 
 

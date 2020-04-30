@@ -1,8 +1,12 @@
 const express = require('express');
 const app = express();
 const path = require('path')
+const shortid = require('shortid');
 
-app.use(express.static(path.join(__dirname,"..")));
+app.use("/:id/", express.static(path.join(__dirname, "..")));
+app.use("/", (req,res) =>{
+    res.redirect("/" + shortid.generate());
+});
 
 const server = app.listen(8000);
 const ShareDB = require('sharedb');
