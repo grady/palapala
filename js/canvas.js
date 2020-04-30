@@ -79,10 +79,7 @@ const eraseTool = new paper.Tool({
             children: project.activeLayer.removeChildren(),
             blendMode: "source-out",
         });
-        eraseTool.mask = new Group({
-            children: [eraseTool.path, eraseTool.group],
-            blendMode: "source-over"
-        });
+        eraseTool.mask = new Group([eraseTool.path, eraseTool.group]);
     },
     onMouseDrag: function (event) {
         eraseTool.path.add(event.point);
@@ -90,7 +87,7 @@ const eraseTool = new paper.Tool({
     onMouseUp: function (event) {
         eraseTool.path.simplify();
         project.activeLayer.addChild(eraseTool.mask);
-        
+
         eraseTool.path = null;
         eraseTool.group = null;
         eraseTool.mask = null;
