@@ -2,6 +2,8 @@ let mementos = [];
 let conn;
 let doc;
 let id;
+let timer;
+
 $(document).ready(init);
 
 function init() {
@@ -44,42 +46,32 @@ function init() {
         if (doc.type == null) {
             doc.create({ items: [], desmos: null });
         } else {
-            doc.data.items.forEach(item => project.activeLayer.importJSON(item));
+            project.importJSON(doc.data.items);
         }
     });
     doc.on('op', function (op, source) {
         console.log(op);
         globals.lastOp = op;
-            if(!source){
-                op.forEach(function(item){
-                    if (item.p[0] == 'items' && item.li) {
-                        project.activeLayer.importJSON(item.li);
-                    }
-                })
-            }
+        if (!source) {
+
+        }
     })
     doc.subscribe();
-    //document.title = "Palapala " + id[0];
     globals.doc = doc;
 }
 
-// function foo(path, item, commands) {
-//     console.log(path)
-//     console.log(item)
-//     if (path.length > 1) {
-//         let id = path.pop();
-//         foo(path, item[id], commands)
-//     } else {
-//         if (commands.li)
-//             item.insertChild(path.pop(), Item.importJSON(commands.li));
-//     }
-// }
+function submitChanges() {
+    let diff = globals.diff(doc.data.items, project.exportJSON({ asString: false }));
+    diff.forEach(item => item.p.unshift("items"));
+    if (diff.length) {
+        doc.submitOp(diff);
+    }
+}
 
 function clearProject(event) {
-    project.clear()
-    doc.submitOp([
-        { p: ["items"], od: doc.data.items, oi: [] }
-    ]);
+    project.clear();
+    //submitChanges();
+    doc.submitOp([{ p: ["items"], od: doc.data.items, oi: [] }]);
 }
 
 function activateTool(name) {
@@ -88,7 +80,7 @@ function activateTool(name) {
 }
 
 function submitItem(item) {
-    doc.submitOp([{ p: ['items', doc.data.items.length], li: JSON.parse(item.exportJSON()) }]);
+    submitChanges();
 }
 
 const penTool = new paper.Tool({
@@ -120,7 +112,6 @@ const eraseTool = new paper.Tool({
     path: null,
     group: null,
     mask: null,
-    op: null,
     onMouseDown: function (event) {
         eraseTool.path = new Path({
             strokeWidth: project.currentStyle.strokeWidth * 3,
@@ -131,7 +122,6 @@ const eraseTool = new paper.Tool({
             blendMode: "source-out",
         });
         eraseTool.mask = new Group([eraseTool.path, eraseTool.group]);
-        op = [{ p: ["items"], od: doc.data.items, oi: [] }]
     },
     onMouseDrag: function (event) {
         eraseTool.path.add(event.point);
@@ -139,8 +129,7 @@ const eraseTool = new paper.Tool({
     onMouseUp: function (event) {
         eraseTool.path.simplify();
         project.activeLayer.addChild(eraseTool.mask);
-        doc.submitOp({ p: ["items"], od: doc.data.items, oi: [JSON.parse(eraseTool.mask.exportJSON())] });
-        //doc.submitOp(op);
+        submitChanges();
         eraseTool.path = null;
         eraseTool.group = null;
         eraseTool.mask = null;

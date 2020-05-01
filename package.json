@@ -29,6 +29,7 @@
     "bootstrap": "^4.4.1",
     "express": "^4.17.1",
     "jquery": "^3.4.1",
+    "json0-ot-diff": "^1.0.5",
     "paper": "^0.12.4",
     "popper.js": "^1.16.0",
     "reconnecting-websocket": "^4.4.0",
