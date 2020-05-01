@@ -1,5 +1,7 @@
 let mementos = [];
-
+let conn;
+let doc;
+let id; 
 $(document).ready(init);
 
 function init() {
@@ -34,7 +36,15 @@ function init() {
     penTool.activate();
 
     globals.paper = paper;
-    console.log(globals.socket);
+    conn = globals.socket();
+    id = window.location.pathname.split("/").filter(v=>v);
+    doc = conn.get('palapala', id[0]);
+    doc.on('load', function(){
+        if (doc.type == null){
+            doc.create({items: [], desmos: null});
+        }
+    });
+    doc.subscribe();
 }
 
 

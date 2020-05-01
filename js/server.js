@@ -19,7 +19,7 @@ const WebSocketJSONStream = require('websocket-json-stream');
 const wss = new WebSocket.Server({port: 8080});
 
 wss.on("connection", function(ws, req){
-    console.log("connection acccepted: " + req.connection.remoteAddress);
+    console.log("connection acccepted: " + (req.headers['x-forwarded-for'] || req.connection.remoteAddress) + req.url);
     let stream = new WebSocketJSONStream(ws);
     backend.listen(stream);
 });
