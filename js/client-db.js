@@ -1,4 +1,6 @@
-$(document).ready(() =>
+
+
+$(document).ready(() => {
   globals.socket = (function () {
     let ReconnectingWebSocket = require('reconnecting-websocket');
     let ShareDb = require('sharedb/lib/client');
@@ -11,5 +13,6 @@ $(document).ready(() =>
       if (!conn) conn = new ShareDb.Connection(socket);
       return conn
     }
-  })()
-);
+  })();
+  globals.json = require("ot-json0").type
+});

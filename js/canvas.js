@@ -1,7 +1,7 @@
 let mementos = [];
 let conn;
 let doc;
-let id; 
+let id;
 $(document).ready(init);
 
 function init() {
@@ -22,7 +22,7 @@ function init() {
         change: color => project.currentStyle.strokeColor.set(color.toRgbString())
     });
 
-    $("#clearButton").click(event => project.clear());
+    $("#clearButton").click(clearProject);
     $("input[name=tool]").click(event => activateTool(event.target.value));
     //$("input[name=tool]").click(event => tools.find(tool => tool.name == event.target.value).activate());
 
@@ -36,21 +36,59 @@ function init() {
     penTool.activate();
 
     globals.paper = paper;
+
     conn = globals.socket();
-    id = window.location.pathname.split("/").filter(v=>v);
+    id = window.location.pathname.split("/").filter(v => v);
     doc = conn.get('palapala', id[0]);
-    doc.on('load', function(){
-        if (doc.type == null){
-            doc.create({items: [], desmos: null});
+    doc.on('load', function () {
+        if (doc.type == null) {
+            doc.create({ items: [], desmos: null });
+        } else {
+            doc.data.items.forEach(item => project.activeLayer.importJSON(item));
         }
     });
+    doc.on('op', function (op, source) {
+        console.log(op);
+        globals.lastOp = op;
+            if(!source){
+                op.forEach(function(item){
+                    if (item.p[0] == 'items' && item.li) {
+                        project.activeLayer.importJSON(item.li);
+                    }
+                })
+            }
+    })
     doc.subscribe();
+    //document.title = "Palapala " + id[0];
+    globals.doc = doc;
 }
 
+// function foo(path, item, commands) {
+//     console.log(path)
+//     console.log(item)
+//     if (path.length > 1) {
+//         let id = path.pop();
+//         foo(path, item[id], commands)
+//     } else {
+//         if (commands.li)
+//             item.insertChild(path.pop(), Item.importJSON(commands.li));
+//     }
+// }
+
+function clearProject(event) {
+    project.clear()
+    doc.submitOp([
+        { p: ["items"], od: doc.data.items, oi: [] }
+    ]);
+}
 
 function activateTool(name) {
     tools.find(tool => tool.name === name).activate();
     desmosTool.desmos.css("z-index", name === "desmos" ? 1 : -1);
+}
+
+function submitItem(item) {
+    doc.submitOp([{ p: ['items', doc.data.items.length], li: JSON.parse(item.exportJSON()) }]);
 }
 
 const penTool = new paper.Tool({
@@ -72,6 +110,7 @@ const penTool = new paper.Tool({
                 fillColor: penTool.path.strokeColor
             });
         }
+        submitItem(penTool.path);
         penTool.path = null;
     }
 });
@@ -81,6 +120,7 @@ const eraseTool = new paper.Tool({
     path: null,
     group: null,
     mask: null,
+    op: null,
     onMouseDown: function (event) {
         eraseTool.path = new Path({
             strokeWidth: project.currentStyle.strokeWidth * 3,
@@ -91,6 +131,7 @@ const eraseTool = new paper.Tool({
             blendMode: "source-out",
         });
         eraseTool.mask = new Group([eraseTool.path, eraseTool.group]);
+        op = [{ p: ["items"], od: doc.data.items, oi: [] }]
     },
     onMouseDrag: function (event) {
         eraseTool.path.add(event.point);
@@ -98,7 +139,8 @@ const eraseTool = new paper.Tool({
     onMouseUp: function (event) {
         eraseTool.path.simplify();
         project.activeLayer.addChild(eraseTool.mask);
-
+        doc.submitOp({ p: ["items"], od: doc.data.items, oi: [JSON.parse(eraseTool.mask.exportJSON())] });
+        //doc.submitOp(op);
         eraseTool.path = null;
         eraseTool.group = null;
         eraseTool.mask = null;
@@ -115,6 +157,7 @@ const circleTool = new Tool({
         circleTool.path.radius = (event.point - event.downPoint).length;
     },
     onMouseUp: function (event) {
+        submitItem(circleTool.path);
         circleTool.path = null;
     }
 });
@@ -128,7 +171,10 @@ const lineTool = new Tool({
         if (event.modifiers.shift) lineTool.path.firstSegment.point.set(lineMirror(event));
         lineTool.path.firstSegment.point.set(event.modifiers.shift ? lineMirror(event) : event.downPoint);
     },
-    onMouseUp: event => lineTool.path = null
+    onMouseUp: function (event) {
+        submitItem(lineTool.path);
+        lineTool.path = null;
+    }
 });
 
 function lineMirror(event) {
@@ -150,7 +196,10 @@ const rectTool = new Tool({
             rectTool.path.position.set((event.downPoint + event.point) / 2);
         }
     },
-    onMouseUp: event => { rectTool.path = null }
+    onMouseUp: function (event) {
+        submitItem(rectTool.path);
+        rectTool.path = null
+    }
 });
 
 const highlightTool = new Tool({
@@ -162,7 +211,10 @@ const highlightTool = new Tool({
 
     },
     onMouseDrag: event => highlightTool.path.add(event.point),
-    onMouseUp: event => highlightTool.path = null
+    onMouseUp: function (event) {
+        submitItem(highlightTool.path);
+        highlightTool.path = null
+    }
 });
 
 const axesTool = new Tool({
@@ -185,7 +237,10 @@ const axesTool = new Tool({
         yaxis.firstSegment.point.y = event.point.y;
         yaxis.lastSegment.point.y = event.modifiers.shift ? mirror.y : event.downPoint.y;
     },
-    onMouseUp: event => axesTool.path = null
+    onMouseUp: function (event) {
+        submitItem(axesTool.path);
+        axesTool.path = null
+    }
 });
 
 const desmosTool = new Tool({
