@@ -50,12 +50,11 @@ function init() {
         }
     });
     doc.on('op', function (op, source) {
-        console.log(op);
-        globals.lastOp = op;
         if (!source) {
-
+            //console.log(op);
+            op.forEach(item => { item.p.shift(); replaceData(getData(item.p)) });
         }
-    })
+    });
     doc.subscribe();
     globals.doc = doc;
 }
@@ -70,7 +69,6 @@ function submitChanges() {
 
 function clearProject(event) {
     project.clear();
-    //submitChanges();
     doc.submitOp([{ p: ["items"], od: doc.data.items, oi: [] }]);
 }
 
@@ -197,7 +195,6 @@ const highlightTool = new Tool({
     onMouseDown: function (event) {
         highlightTool.path = new Path({ strokeWidth: project.currentStyle.strokeWidth * 5 });
         highlightTool.path.strokeColor.alpha = 0.4;
-
     },
     onMouseDrag: event => highlightTool.path.add(event.point),
     onMouseUp: function (event) {
@@ -279,4 +276,45 @@ function redo(event) {
 function clearUndo() {
     mementos.length = 0;
     $("#redoButton").prop('disabled', true);
+}
+
+// find last index where fn(array[index]) is truthy
+function lastIndexOf(array, fn) {
+    let index = array.length - 1;
+    for (; index >= 0; index--) { if (fn(array[index])) break; }
+    return index;
+}
+
+// index of doc path to importJSON
+function pathData(path) {
+    let data = doc.data['items'];
+    path.forEach(item => { data = data[item] });
+    return data;
+}
+
+// Find the JSON to be serialized for path
+// the deepest where data is ["Class", {...}]
+function getData(path) {
+    let result, slice, index = path.length;
+
+    for (; index > 0; index--) {
+        slice = path.slice(0, index);
+        result = pathData(slice);
+        if (typeof result[0] === 'string') { break }
+    }
+    return { path: slice, data: result };
+}
+
+function replaceData({ path, data }) {
+    let newObj = new paper[data[0]](data[1]);
+    let oldObj = paper.project.layers;
+    // loop ii over path.length, jj is mod 3
+    for (let ii = 0, jj = 0; ii < path.length; ii++, jj += (jj > 1) ? -2 : 1) {
+        if (jj === 1) {
+            continue;
+        } else {
+            oldObj = oldObj[path[ii]];
+        }
+    }
+    return oldObj.replaceWith(newObj);
 }
