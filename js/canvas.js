@@ -44,32 +44,27 @@ function init() {
     doc = conn.get('palapala', id[0]);
     doc.on('load', function () {
         if (doc.type == null) {
-            doc.create({ items: [], desmos: null });
+            doc.create({ layers: [], desmos: null });
         } else {
-            project.importJSON(doc.data.items);
+            project.importJSON(doc.data.layers);
         }
     });
     doc.on('op', function (op, source) {
-        if (!source) {
-            //console.log(op);
-            op.forEach(item => { item.p.shift(); replaceData(item) });
-        }
+        if (!source) { op.forEach(item => { replaceData(item) }); }
     });
     doc.subscribe();
     globals.doc = doc;
 }
 
 function submitChanges() {
-    let diff = globals.diff(doc.data.items, project.exportJSON({ asString: false }));
-    diff.forEach(item => item.p.unshift("items"));
-    if (diff.length) {
-        doc.submitOp(diff);
-    }
+    let diff = globals.diff(doc.data.layers, project.exportJSON({ asString: false }));
+    diff.forEach(item => item.p.unshift("layers"));
+    if (diff.length) { doc.submitOp(diff); }
 }
 
 function clearProject(event) {
     project.clear();
-    doc.submitOp([{ p: ["items"], od: doc.data.items, oi: [] }]);
+    doc.submitOp([{ p: ["layers"], od: doc.data.layers, oi: [] }]);
 }
 
 function activateTool(name) {
@@ -287,7 +282,7 @@ function lastIndexOf(array, fn) {
 
 // get data at path
 function pathData(path) {
-    let data = doc.data['items'];
+    let data = doc.data;
     path.forEach(item => { data = data[item] });
     return data;
 }
@@ -305,24 +300,25 @@ function getData(path) {
     return { path: slice, data: result };
 }
 
+// find 
+function getPaperObj(path){
+    let paperPath = path.filter((item, index) => (index - 2) % 3); // drop 2,5,8...
+    let curObj = project;
+    let testObj, action;
+    for (let ii = 0; ii < paperPath.length; ii += 2){ // increment is 2!
+        testObj = curObj[paperPath[ii]][paperPath[ii+1]]; // each pair in paith is .param[index]
+        if (testObj) curObj = testObj;
+        else return {o: curObj, a: "addChild"};
+    }
+    return {o: curObj, a: "replaceWith"};
+}
+
 function replaceData(op) {
-    let {path, data} = getData(op.p);
-    let params = {insert: false};
+    let { path, data } = getData(op.p);
+    let params = { insert: false };
     Object.assign(params, data[1]);
     let newObj = new paper[data[0]](params);
-    let oldObj = paper.project.layers;
-    // loop ii over path.length, jj is mod 3
-    for (let ii = 0, jj = 0; ii < path.length; ii++, jj += (jj > 1) ? -2 : 1) {
-        debugger;
-        if (jj === 1) {
-            continue;
-        } else {
-            if (oldObj[path[ii]])
-                oldObj = oldObj[path[ii]];
-            else{
-                //return oldObj.parent.addChild(newObj)
-            }
-        }
-    }
-    return oldObj.replaceWith(newObj);
+    //debugger;
+    let paperObj = getPaperObj(path);
+    return paperObj.o[paperObj.a](newObj);
 }
