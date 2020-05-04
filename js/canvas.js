@@ -52,7 +52,7 @@ function init() {
     doc.on('op', function (op, source) {
         if (!source) {
             //console.log(op);
-            op.forEach(item => { item.p.shift(); replaceData(getData(item.p)) });
+            op.forEach(item => { item.p.shift(); replaceData(item) });
         }
     });
     doc.subscribe();
@@ -285,7 +285,7 @@ function lastIndexOf(array, fn) {
     return index;
 }
 
-// index of doc path to importJSON
+// get data at path
 function pathData(path) {
     let data = doc.data['items'];
     path.forEach(item => { data = data[item] });
@@ -305,15 +305,23 @@ function getData(path) {
     return { path: slice, data: result };
 }
 
-function replaceData({ path, data }) {
-    let newObj = new paper[data[0]](data[1]);
+function replaceData(op) {
+    let {path, data} = getData(op.p);
+    let params = {insert: false};
+    Object.assign(params, data[1]);
+    let newObj = new paper[data[0]](params);
     let oldObj = paper.project.layers;
     // loop ii over path.length, jj is mod 3
     for (let ii = 0, jj = 0; ii < path.length; ii++, jj += (jj > 1) ? -2 : 1) {
+        debugger;
         if (jj === 1) {
             continue;
         } else {
-            oldObj = oldObj[path[ii]];
+            if (oldObj[path[ii]])
+                oldObj = oldObj[path[ii]];
+            else{
+                //return oldObj.parent.addChild(newObj)
+            }
         }
     }
     return oldObj.replaceWith(newObj);
