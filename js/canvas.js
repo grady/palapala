@@ -106,6 +106,20 @@ const penTool = new paper.Tool({
     }
 });
 
+const brushTool = new paper.Tool({
+    name: "brush",
+    path: null,
+    onMouseDown: function (event) {
+
+    },
+    onMouseDrag: function (event) {
+
+    },
+    onMouseUp: function (event) {
+        brushTool.path = null;
+    }
+});
+
 const eraseTool = new paper.Tool({
     name: "erase",
     path: null,
