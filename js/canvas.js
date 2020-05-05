@@ -84,6 +84,8 @@ const penTool = new paper.Tool({
     name: "pen",
     path: null,
     onMouseDown: function (event) {
+        if (project.activeLayer.blendMode === "destination-out")
+            (new Layer()).activate();
         penTool.path = new Path();
     },
     onMouseDrag: function (event) {
@@ -107,29 +109,20 @@ const penTool = new paper.Tool({
 const eraseTool = new paper.Tool({
     name: "erase",
     path: null,
-    group: null,
-    mask: null,
     onMouseDown: function (event) {
+        if (project.activeLayer.blendMode !== "destination-out")
+            (new Layer({ blendMode: "destination-out" })).activate();
         eraseTool.path = new Path({
             strokeWidth: project.currentStyle.strokeWidth * (event.modifiers.shift ? 20 : 5),
-            strokeColor: "white"
         });
-        eraseTool.group = new Group({
-            children: project.activeLayer.removeChildren(),
-            blendMode: "source-out",
-        });
-        eraseTool.mask = new Group([eraseTool.path, eraseTool.group]);
     },
     onMouseDrag: function (event) {
         eraseTool.path.add(event.point);
     },
     onMouseUp: function (event) {
         eraseTool.path.simplify();
-        project.activeLayer.addChild(eraseTool.mask);
         submitChanges();
         eraseTool.path = null;
-        eraseTool.group = null;
-        eraseTool.mask = null;
     }
 });
 
@@ -137,6 +130,8 @@ const circleTool = new Tool({
     name: "circle",
     path: null,
     onMouseDown: function (event) {
+        if (project.activeLayer.blendMode === "destination-out")
+            (new Layer()).activate();
         circleTool.path = new Shape.Circle(event.point, 10);
     },
     onMouseDrag: function (event) {
@@ -151,7 +146,11 @@ const circleTool = new Tool({
 const lineTool = new Tool({
     name: "line",
     path: null,
-    onMouseDown: event => lineTool.path = new Path([event.point, event.point]),
+    onMouseDown: event => {
+        if (project.activeLayer.blendMode === "destination-out")
+            (new Layer()).activate();
+        lineTool.path = new Path([event.point, event.point])
+    },
     onMouseDrag: function (event) {
         lineTool.path.lastSegment.point.set(event.point);
         if (event.modifiers.shift) lineTool.path.firstSegment.point.set(lineMirror(event));
@@ -170,7 +169,11 @@ function lineMirror(event) {
 const rectTool = new Tool({
     name: "rectangle",
     path: null,
-    onMouseDown: event => rectTool.path = new Shape.Rectangle(event.point, event.point),
+    onMouseDown: event => {
+        if (project.activeLayer.blendMode === "destination-out")
+            (new Layer()).activate();
+        rectTool.path = new Shape.Rectangle(event.point, event.point)
+    },
     onMouseDrag: function (event) {
         let size = event.point - event.downPoint;
         if (event.modifiers.shift) {
@@ -192,6 +195,8 @@ const highlightTool = new Tool({
     name: "highlight",
     path: null,
     onMouseDown: function (event) {
+        if (project.activeLayer.blendMode === "destination-out")
+            (new Layer()).activate();
         highlightTool.path = new Path({ strokeWidth: project.currentStyle.strokeWidth * 5 });
         highlightTool.path.strokeColor.alpha = 0.4;
     },
@@ -206,6 +211,8 @@ const axesTool = new Tool({
     name: "axes",
     path: null,
     onMouseDown: function (event) {
+        if (project.activeLayer.blendMode === "destination-out")
+            (new Layer()).activate();
         axesTool.path = new CompoundPath({
             children: [
                 new Path([event.point, event.point]),
