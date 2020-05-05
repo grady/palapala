@@ -44,7 +44,7 @@ function init() {
     doc = conn.get('palapala', id[0]);
     doc.on('load', function () {
         if (doc.type == null) {
-            doc.create({ layers: [], desmos: null });
+            doc.create({ layers: project.exportJSON({ asString: false }), desmos: null });
         } else {
             project.importJSON(doc.data.layers);
         }
@@ -59,20 +59,24 @@ function init() {
 function submitChanges() {
     let diff = globals.diff(doc.data.layers, project.exportJSON({ asString: false }));
     diff.forEach(item => item.p.unshift("layers"));
+    //debugger;
     if (diff.length) { doc.submitOp(diff); }
 }
 
 function clearProject(event) {
     project.clear();
-    doc.submitOp([{ p: ["layers"], od: doc.data.layers, oi: [] }]);
+    doc.submitOp([{ p: ["layers"], od: doc.data.layers, oi: project.exportJSON({ asString: false }) }]);
 }
 
 function activateTool(name) {
+    if (paper.tool.name === "desmos" || name === "desmos")
+        desmosTool.desmos.css("z-index", name === "desmos" ? 1 : -1);
     tools.find(tool => tool.name === name).activate();
-    desmosTool.desmos.css("z-index", name === "desmos" ? 1 : -1);
+
 }
 
 function submitItem(item) {
+    //item.parent.index;
     submitChanges();
 }
 
@@ -107,7 +111,7 @@ const eraseTool = new paper.Tool({
     mask: null,
     onMouseDown: function (event) {
         eraseTool.path = new Path({
-            strokeWidth: project.currentStyle.strokeWidth * 3,
+            strokeWidth: project.currentStyle.strokeWidth * (event.modifiers.shift ? 20 : 5),
             strokeColor: "white"
         });
         eraseTool.group = new Group({
@@ -301,19 +305,22 @@ function getData(path) {
 }
 
 // find 
-function getPaperObj(path){
+function getPaperObj(path) {
     let paperPath = path.filter((item, index) => (index - 2) % 3); // drop 2,5,8...
     let curObj = project;
     let testObj, action;
-    for (let ii = 0; ii < paperPath.length; ii += 2){ // increment is 2!
-        testObj = curObj[paperPath[ii]][paperPath[ii+1]]; // each pair in paith is .param[index]
+    for (let ii = 0; ii < paperPath.length; ii += 2) { // increment is 2!
+        testObj = curObj[paperPath[ii]][paperPath[ii + 1]]; // each pair in path is .param[index]
         if (testObj) curObj = testObj;
-        else return {o: curObj, a: "addChild"};
+        else return { o: curObj, a: "addChild" };
     }
-    return {o: curObj, a: "replaceWith"};
+    return { o: curObj, a: "replaceWith" };
 }
 
 function replaceData(op) {
+    //debugger;
+    //if(op.p.length === 1 && op.p[0] === "layers" && op.oi && !op.oi.length) // {p: ["layers"], li: []}
+    //    return project.clear();
     let { path, data } = getData(op.p);
     let params = { insert: false };
     Object.assign(params, data[1]);
