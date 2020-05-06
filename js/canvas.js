@@ -50,7 +50,7 @@ function init() {
         }
     });
     doc.on('op', function (op, source) {
-        if (!source) { op.forEach(item => { replaceData(item) }); }
+        if (!source) { console.log(op); op.forEach(item => { replaceData(item) }); }
     });
     doc.subscribe();
     globals.doc = doc;
@@ -65,6 +65,8 @@ function submitChanges() {
 
 function clearProject(event) {
     project.clear();
+    (new Layer()).activate();
+    new Path();
     doc.submitOp([{ p: ["layers"], od: doc.data.layers, oi: project.exportJSON({ asString: false }) }]);
 }
 
@@ -80,13 +82,17 @@ function submitItem(item) {
     submitChanges();
 }
 
+function submitPath(path) {
+    doc.submitOp([{ p: ["layers", project.activeLayer.index, 1, "children", path.index], li: path.exportJSON({ asString: false }) }]);
+}
+
 const penTool = new paper.Tool({
     name: "pen",
     path: null,
     onMouseDown: function (event) {
         if (project.activeLayer.blendMode === "destination-out")
             (new Layer()).activate();
-        penTool.path = new Path();
+        penTool.path = new Path({ strokeColor: project.currentStyle.strokeColor.clone(), strokeWidth: project.currentStyle.strokeWidth });
     },
     onMouseDrag: function (event) {
         if (penTool.path) penTool.path.add(event.point);
@@ -101,6 +107,11 @@ const penTool = new paper.Tool({
                 fillColor: penTool.path.strokeColor
             });
         }
+        //debugger;
+        doc.submitOp([{
+            p: ["layers", project.activeLayer.index, 1, "children", penTool.path.index],
+            li: penTool.path.exportJSON({ asString: false })
+        }]);
         //submitItem(penTool.path);
         penTool.path = null;
     }
@@ -116,15 +127,15 @@ const brushTool = new paper.Tool({
         if (project.activeLayer.blendMode === "destination-out")
             (new Layer()).activate();
         brushTool.path = new Path({ closed: true, fillColor: project.currentStyle.strokeColor, strokeWidth: 1, segments: [event.point] })
-        brushTool.leftPath = new Path({fillColor: project.currentStyle.strokeColor, strokeWidth: 0, segments: [event.point], insert:false })
-        brushTool.rightPath = new Path({fillColor: project.currentStyle.strokeColor, strokeWidth: 0, insert:false })
+        brushTool.leftPath = new Path({ fillColor: project.currentStyle.strokeColor.clone(), strokeWidth: 0, segments: [event.point], insert: false })
+        brushTool.rightPath = new Path({ insert: false })
     },
     onMouseDrag: function (event) {
         let diff = event.delta;
         let force = event.event.type === "touchmove" ? event.event.changedTouches[0].force : 1;
         diff.length *= 200; // make it longer for angle calculations?
         diff.angle += 90;
-        diff.length = Math.max(1,force * project.currentStyle.strokeWidth);
+        diff.length = Math.max(1, force * project.currentStyle.strokeWidth);
         let lp = event.point - diff, rp = event.point + diff;
         brushTool.path.insertSegments(event.count, [lp, rp]);
         brushTool.leftPath.add(lp);
@@ -138,7 +149,11 @@ const brushTool = new paper.Tool({
         brushTool.leftPath.addSegments(brushTool.rightPath.segments);
         brushTool.leftPath.closePath();
         brushTool.path.replaceWith(brushTool.leftPath);
-
+        //submitPath(brushTool.path);
+        doc.submitOp([{
+            p: ["layers", project.activeLayer.index, 1, "children", brushTool.leftPath.index],
+            li: brushTool.leftPath.exportJSON({ asString: false })
+        }]);
         brushTool.path = null;
         brushTool.leftPath = null;
         brushTool.rightPath = null;
