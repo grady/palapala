@@ -101,7 +101,7 @@ const penTool = new paper.Tool({
                 fillColor: penTool.path.strokeColor
             });
         }
-        submitItem(penTool.path);
+        //submitItem(penTool.path);
         penTool.path = null;
     }
 });
@@ -109,14 +109,39 @@ const penTool = new paper.Tool({
 const brushTool = new paper.Tool({
     name: "brush",
     path: null,
+    leftPath: null,
+    rightPath: null,
+    minDistance: 5,
     onMouseDown: function (event) {
-
+        if (project.activeLayer.blendMode === "destination-out")
+            (new Layer()).activate();
+        brushTool.path = new Path({ closed: true, fillColor: project.currentStyle.strokeColor, strokeWidth: 1, segments: [event.point] })
+        brushTool.leftPath = new Path({fillColor: project.currentStyle.strokeColor, strokeWidth: 0, segments: [event.point], insert:false })
+        brushTool.rightPath = new Path({fillColor: project.currentStyle.strokeColor, strokeWidth: 0, insert:false })
     },
     onMouseDrag: function (event) {
-
+        let diff = event.delta;
+        let force = event.event.type === "touchmove" ? event.event.changedTouches[0].force : 1;
+        diff.length *= 200; // make it longer for angle calculations?
+        diff.angle += 90;
+        diff.length = Math.max(1,force * project.currentStyle.strokeWidth);
+        let lp = event.point - diff, rp = event.point + diff;
+        brushTool.path.insertSegments(event.count, [lp, rp]);
+        brushTool.leftPath.add(lp);
+        brushTool.rightPath.add(rp);
     },
     onMouseUp: function (event) {
+        brushTool.leftPath.add(event.point);
+        brushTool.leftPath.simplify(1.5);
+        brushTool.rightPath.simplify(1.5);
+        brushTool.rightPath.reverse();
+        brushTool.leftPath.addSegments(brushTool.rightPath.segments);
+        brushTool.leftPath.closePath();
+        brushTool.path.replaceWith(brushTool.leftPath);
+
         brushTool.path = null;
+        brushTool.leftPath = null;
+        brushTool.rightPath = null;
     }
 });
 
