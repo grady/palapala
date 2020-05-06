@@ -95,10 +95,9 @@ function newLayer(blendMode) {
 
 const penTool = new paper.Tool({
     name: "pen",
+    minDistance:2,
     path: null,
     onMouseDown: function (event) {
-        if (project.activeLayer.blendMode === "destination-out")
-            newLayer();
         penTool.path = new Path({ strokeColor: project.currentStyle.strokeColor.clone(), strokeWidth: project.currentStyle.strokeWidth });
     },
     onMouseDrag: function (event) {
@@ -127,16 +126,13 @@ const brushTool = new paper.Tool({
     rightPath: null,
     minDistance: 5,
     onMouseDown: function (event) {
-        if (project.activeLayer.blendMode === "destination-out")
-            newLayer();
         brushTool.path = new Path({ closed: true, fillColor: project.currentStyle.strokeColor, strokeWidth: 1, segments: [event.point] })
         brushTool.leftPath = new Path({ fillColor: project.currentStyle.strokeColor.clone(), strokeWidth: 0, segments: [event.point], insert: false })
         brushTool.rightPath = new Path({ insert: false })
     },
     onMouseDrag: function (event) {
         let diff = event.delta;
-        let force = event.event.type === "touchmove" ? event.event.changedTouches[0].force : 1;
-        diff.length *= 200; // make it longer for angle calculations?
+        let force = event.event.type === "touchmove" ? event.event.changedTouches[0].force**2 : 1;
         diff.angle += 90;
         diff.length = Math.max(1, force * project.currentStyle.strokeWidth);
         let lp = event.point - diff, rp = event.point + diff;
@@ -145,14 +141,18 @@ const brushTool = new paper.Tool({
         brushTool.rightPath.add(rp);
     },
     onMouseUp: function (event) {
-        brushTool.leftPath.add(event.point);
-        brushTool.leftPath.simplify(1.5);
-        brushTool.rightPath.simplify(1.5);
-        brushTool.rightPath.reverse();
-        brushTool.leftPath.addSegments(brushTool.rightPath.segments);
-        brushTool.leftPath.closePath();
-        brushTool.path.replaceWith(brushTool.leftPath);
-        submitPath(brushTool.leftPath);
+        let leftPath = brushTool.leftPath, rightPath=brushTool.rightPath, path=brushTool.path;
+        setTimeout(function () {
+            leftPath.add(event.point);
+            leftPath.simplify(5);
+            rightPath.simplify(5);
+            rightPath.reverse();
+            leftPath.addSegments(rightPath.segments);
+            leftPath.closePath();
+            path.replaceWith(leftPath);
+            submitPath(leftPath);
+
+        }, 0);
         brushTool.path = null;
         brushTool.leftPath = null;
         brushTool.rightPath = null;
@@ -163,11 +163,9 @@ const eraseTool = new paper.Tool({
     name: "erase",
     path: null,
     onMouseDown: function (event) {
-        if (project.activeLayer.blendMode !== "destination-out")
-            newLayer("destination-out");
-        //(new Layer({ blendMode: "destination-out" })).activate();
         eraseTool.path = new Path({
             strokeWidth: project.currentStyle.strokeWidth * (event.modifiers.shift ? 20 : 5),
+            blendMode: "destination-out"
         });
     },
     onMouseDrag: function (event) {
@@ -176,7 +174,6 @@ const eraseTool = new paper.Tool({
     onMouseUp: function (event) {
         eraseTool.path.simplify();
         submitPath(eraseTool.path);
-        //submitChanges();
         eraseTool.path = null;
     }
 });
@@ -185,16 +182,12 @@ const circleTool = new Tool({
     name: "circle",
     path: null,
     onMouseDown: function (event) {
-        if (project.activeLayer.blendMode === "destination-out")
-            //(new Layer()).activate();
-            newLayer();
         circleTool.path = new Shape.Circle(event.point, 10);
     },
     onMouseDrag: function (event) {
         circleTool.path.radius = (event.point - event.downPoint).length;
     },
     onMouseUp: function (event) {
-        //submitItem(circleTool.path);
         submitPath(circleTool.path);
         circleTool.path = null;
     }
@@ -204,9 +197,6 @@ const lineTool = new Tool({
     name: "line",
     path: null,
     onMouseDown: event => {
-        if (project.activeLayer.blendMode === "destination-out")
-            newLayer();
-        //(new Layer()).activate();
         lineTool.path = new Path([event.point, event.point])
     },
     onMouseDrag: function (event) {
@@ -228,9 +218,6 @@ const rectTool = new Tool({
     name: "rectangle",
     path: null,
     onMouseDown: event => {
-        if (project.activeLayer.blendMode === "destination-out")
-            newLayer();
-        //(new Layer()).activate();
         rectTool.path = new Shape.Rectangle(event.point, event.point)
     },
     onMouseDrag: function (event) {
@@ -254,9 +241,6 @@ const highlightTool = new Tool({
     name: "highlight",
     path: null,
     onMouseDown: function (event) {
-        if (project.activeLayer.blendMode === "destination-out")
-            newLayer();
-        //(new Layer()).activate();
         highlightTool.path = new Path({ strokeWidth: project.currentStyle.strokeWidth * 5 });
         highlightTool.path.strokeColor.alpha = 0.4;
     },
@@ -271,8 +255,6 @@ const axesTool = new Tool({
     name: "axes",
     path: null,
     onMouseDown: function (event) {
-        if (project.activeLayer.blendMode === "destination-out")
-            newLayer(); //(new Layer()).activate();
         axesTool.path = new CompoundPath({
             children: [
                 new Path([event.point, event.point]),
