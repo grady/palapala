@@ -115,12 +115,7 @@ const penTool = new paper.Tool({
             });
         }
         //debugger;
-        // doc.submitOp([{
-        //     p: ["layers", project.activeLayer.index, 1, "children", penTool.path.index],
-        //     li: penTool.path.exportJSON({ asString: false })
-        // }]);
         submitPath(penTool.path);
-        //submitItem(penTool.path);
         penTool.path = null;
     }
 });
@@ -157,11 +152,6 @@ const brushTool = new paper.Tool({
         brushTool.leftPath.addSegments(brushTool.rightPath.segments);
         brushTool.leftPath.closePath();
         brushTool.path.replaceWith(brushTool.leftPath);
-        //submitPath(brushTool.path);
-        // doc.submitOp([{
-        //     p: ["layers", project.activeLayer.index, 1, "children", brushTool.leftPath.index],
-        //     li: brushTool.leftPath.exportJSON({ asString: false })
-        // }]);
         submitPath(brushTool.leftPath);
         brushTool.path = null;
         brushTool.leftPath = null;
@@ -354,55 +344,17 @@ function clearUndo() {
     $("#redoButton").prop('disabled', true);
 }
 
-// find last index where fn(array[index]) is truthy
-function lastIndexOf(array, fn) {
-    let index = array.length - 1;
-    for (; index >= 0; index--) { if (fn(array[index])) break; }
-    return index;
-}
-
-// get data at path
-function pathData(path) {
-    let data = doc.data;
-    path.forEach(item => { data = data[item] });
-    return data;
-}
-
-// Find the JSON to be serialized for path
-// the deepest where data is ["Class", {...}]
-function getData(path) {
-    let result, slice, index = path.length;
-
-    for (; index > 0; index--) {
-        slice = path.slice(0, index);
-        result = pathData(slice);
-        if (typeof result[0] === 'string') { break }
-    }
-    return { path: slice, data: result };
-}
-
-// find 
-function getPaperObj(path) {
-    let paperPath = path.filter((item, index) => (index - 2) % 3); // drop 2,5,8...
-    let curObj = project;
-    let testObj, action;
-    for (let ii = 0; ii < paperPath.length; ii += 2) { // increment is 2!
-        testObj = curObj[paperPath[ii]][paperPath[ii + 1]]; // each pair in path is .param[index]
-        if (testObj) curObj = testObj;
-        else return { o: curObj, a: "addChild" };
-    }
-    return { o: curObj, a: "replaceWith" };
-}
-
 function replaceData(op) {
-    //debugger;
-    //if(op.p.length === 1 && op.p[0] === "layers" && op.oi && !op.oi.length) // {p: ["layers"], li: []}
-    //    return project.clear();
-    let { path, data } = getData(op.p);
-    let params = { insert: false };
-    Object.assign(params, data[1]);
-    let newObj = new paper[data[0]](params);
-    //debugger;
-    let paperObj = getPaperObj(path);
-    return paperObj.o[paperObj.a](newObj);
+    if (op.p.length == 1 && op.od) {
+        project.clear();
+        project.importJSON(op.oi);
+        return;
+    }
+    let path = op.p.filter((item, index) => (index - 2) % 3);
+    let testObj, oldObj = project;
+    for (let ii = 0; ii < path.length; ii += 2) {
+        testObj = oldObj[path[ii]][path[ii + 1]];
+        if (testObj) oldObj = testObj;
+    }
+    oldObj.importJSON(op.li);
 }
