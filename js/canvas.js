@@ -4,6 +4,7 @@ let doc;
 let id;
 let timer;
 
+
 $(document).ready(init);
 
 function init() {
@@ -47,10 +48,25 @@ function init() {
             doc.create({ layers: project.exportJSON({ asString: false }), desmos: null });
         } else {
             project.importJSON(doc.data.layers);
+            if (doc.data.desmos) {
+                desmosTool.desmos.css(doc.data.desmos.css);
+                if (!desmosTool.calc)
+                    initDesmos();
+                if (doc.data.desmos.state)
+                    desmosTool.calc.setState(doc.data.desmos.state);
+            }
         }
     });
     doc.on('op', function (op, source) {
-        if (!source) { console.log(op); op.forEach(item => { replaceData(item) }); }
+        if (!source) {
+            console.log(op);
+            op.filter(i => i.p[0] === "layers").forEach(item => { replaceData(item) });
+            op.filter(i => i.p[0] === "desmos").forEach(item => {
+                desmosTool.desmos.css(doc.data.desmos.css);
+                if (doc.data.desmos.state)
+                    desmosTool.calc.setState(doc.data.desmos.state);
+            });
+        }
     });
     doc.subscribe();
     globals.doc = doc;
@@ -95,7 +111,7 @@ function newLayer(blendMode) {
 
 const penTool = new paper.Tool({
     name: "pen",
-    minDistance:2,
+    minDistance: 2,
     path: null,
     onMouseDown: function (event) {
         penTool.path = new Path({ strokeColor: project.currentStyle.strokeColor.clone(), strokeWidth: project.currentStyle.strokeWidth });
@@ -132,7 +148,7 @@ const brushTool = new paper.Tool({
     },
     onMouseDrag: function (event) {
         let diff = event.delta;
-        let force = event.event.type === "touchmove" ? event.event.changedTouches[0].force**2 : 1;
+        let force = event.event.type === "touchmove" ? event.event.changedTouches[0].force ** 2 : 1;
         diff.angle += 90;
         diff.length = Math.max(1, force * project.currentStyle.strokeWidth);
         let lp = event.point - diff, rp = event.point + diff;
@@ -141,7 +157,7 @@ const brushTool = new paper.Tool({
         brushTool.rightPath.add(rp);
     },
     onMouseUp: function (event) {
-        let leftPath = brushTool.leftPath, rightPath=brushTool.rightPath, path=brushTool.path;
+        let leftPath = brushTool.leftPath, rightPath = brushTool.rightPath, path = brushTool.path;
         setTimeout(function () {
             leftPath.add(event.point);
             leftPath.simplify(5);
@@ -295,16 +311,32 @@ const desmosTool = new Tool({
         desmosTool.path.remove();
         desmosTool.path = null;
         let rect = new Rectangle(event.downPoint, event.point);
-        desmosTool.desmos.css({
+        let css = {
             display: "inherit",
-            left: rect.left + 'px',
-            top: rect.top + 'px',
+            left: rect.left,
+            top: rect.top,
             width: rect.width,
             height: rect.height,
-        });
-        if (!desmosTool.calc) desmosTool.calc = Desmos.GraphingCalculator(desmosTool.desmos[0]);
+        }
+        desmosTool.desmos.css(css);
+
+        if (!desmosTool.calc){
+            initDesmos();
+        }
+        doc.submitOp([{ p: ["desmos"], oi: { css: css, state: desmosTool.calc.getState() } }]);
     }
 });
+
+function initDesmos(){
+    if(!desmosTool.calc){
+        desmosTool.calc = Desmos.GraphingCalculator(desmosTool.desmos[0])
+        desmosTool.calc.observeEvent('change', function(){
+            console.log(desmosTool.calc.getState());
+            //if(JSON.stringify(desmosTool.calc.getState) !== JSON.stringify(doc.data.desmos.state))
+                //doc.submitOp([{p: ["desmos", "state"], oi:desmosTool.calc.getState()}]);
+        });
+    }
+}
 
 function undo(event) {
     let item = project.activeLayer.lastChild;
