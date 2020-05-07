@@ -15,6 +15,7 @@ $(document).ready(() => {
     }
   })();
   globals.json = require("ot-json0").type;
-  globals.diff = require("json0-ot-diff");
+  //globals.diff = require("json0-ot-diff");
+  globals.isequal = require("lodash.isequal");
 });
 

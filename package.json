@@ -29,7 +29,7 @@
     "bootstrap": "^4.4.1",
     "express": "^4.17.1",
     "jquery": "^3.4.1",
-    "json0-ot-diff": "^1.0.5",
+    "lodash.isequal": "^4.5.0",
     "paper": "^0.12.4",
     "popper.js": "^1.16.0",
     "reconnecting-websocket": "^4.4.0",
@@ -38,7 +38,6 @@
     "shortid": "^2.2.15",
     "simplify-js": "^1.2.4",
     "spectrum-colorpicker": "^1.8.0",
-    "uuid": "^7.0.3",
     "websocket-json-stream": "0.0.3",
     "ws": "^7.2.3"
   },

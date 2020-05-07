@@ -63,8 +63,11 @@ function init() {
             op.filter(i => i.p[0] === "layers").forEach(item => { replaceData(item) });
             op.filter(i => i.p[0] === "desmos").forEach(item => {
                 desmosTool.desmos.css(doc.data.desmos.css);
-                if (doc.data.desmos.state)
+                //if (doc.data.desmos.state )
+                if (!globals.isequal(doc.data.desmos.state, desmosTool.calc.getState())) {
+                    console.log('setState', doc.data.desmos.state);
                     desmosTool.calc.setState(doc.data.desmos.state);
+                }
             });
         }
     });
@@ -298,6 +301,7 @@ const desmosTool = new Tool({
     desmos: $("#desmos"),
     calc: null,
     path: null,
+    timer: null,
     onMouseDown: function (event) {
         desmosTool.path = new Shape.Rectangle(event.point, event.point);
         desmosTool.path.strokeWidth = 1;
@@ -320,20 +324,24 @@ const desmosTool = new Tool({
         }
         desmosTool.desmos.css(css);
 
-        if (!desmosTool.calc){
+        if (!desmosTool.calc) {
             initDesmos();
         }
         doc.submitOp([{ p: ["desmos"], oi: { css: css, state: desmosTool.calc.getState() } }]);
     }
 });
 
-function initDesmos(){
-    if(!desmosTool.calc){
+function initDesmos() {
+    if (!desmosTool.calc) {
         desmosTool.calc = Desmos.GraphingCalculator(desmosTool.desmos[0])
-        desmosTool.calc.observeEvent('change', function(){
-            console.log(desmosTool.calc.getState());
-            //if(JSON.stringify(desmosTool.calc.getState) !== JSON.stringify(doc.data.desmos.state))
-                //doc.submitOp([{p: ["desmos", "state"], oi:desmosTool.calc.getState()}]);
+        desmosTool.calc.observeEvent('change', function () {
+            if (desmosTool.timer) clearTimeout(desmosTool.timer);
+            desmosTool.timer = setTimeout(function () {
+                if (!globals.isequal(doc.data.desmos.state, desmosTool.calc.getState())) {
+                    console.log("onChange", desmosTool.calc.getState());
+                    doc.submitOp([{ p: ["desmos", "state"], oi: desmosTool.calc.getState() }]);
+                }
+            }, 0);
         });
     }
 }
