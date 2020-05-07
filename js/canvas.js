@@ -45,6 +45,9 @@ function init() {
     doc = conn.get('palapala', id[0]);
     doc.on('load', function () {
         if (doc.type == null) {
+            project.clear();
+            (new Layer()).activate();
+            new Path();
             doc.create({ layers: project.exportJSON({ asString: false }), desmos: null });
         } else {
             project.importJSON(doc.data.layers);
