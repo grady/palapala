@@ -10,8 +10,8 @@ app.use("/", (req,res) =>{
 
 const server = app.listen(8000);
 const ShareDB = require('sharedb');
-
-const db = require("sharedb-mongo")(process.env.MONGO_URL);
+const mongodb = require("mongodb");
+const db = require("sharedb-mongo")({mongo: cb => {mongodb.connect(process.env.MONGO_URL, {useUnifiedTopology: true}, cb)}});
 const backend = new ShareDB({db});
 
 const WebSocket = require('ws');
