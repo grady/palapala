@@ -336,7 +336,7 @@ const desmosTool = new Tool({
 
 function initDesmos() {
     if (!desmosTool.calc) {
-        desmosTool.calc = Desmos.GraphingCalculator(desmosTool.desmos[0])
+        desmosTool.calc = Desmos.GraphingCalculator(desmosTool.desmos[0], {expressionsCollapsed: true});
         if (doc.data.desmos && doc.data.desmos.state)
             desmosTool.calc.setState(doc.data.desmos.state);
         desmosTool.calc.observeEvent('change', function () {
