@@ -8,7 +8,7 @@ $(document).ready(() => {
     return function () {
       let url = new URL(document.location);
       //url.port = 8080;
-      url.protocol = (url.protocol === "https") ? "wss" : "ws";
+      url.protocol = (url.protocol === "https:") ? "wss" : "ws";
       if (!socket) socket = new ReconnectingWebSocket(url.href);
       if (!conn) conn = new ShareDb.Connection(socket);
       return conn
