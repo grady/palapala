@@ -337,14 +337,13 @@ const desmosTool = new Tool({
 function initDesmos() {
     if (!desmosTool.calc) {
         desmosTool.calc = Desmos.GraphingCalculator(desmosTool.desmos[0])
+        if (doc.data.desmos && doc.data.desmos.state)
+            desmosTool.calc.setState(doc.data.desmos.state);
         desmosTool.calc.observeEvent('change', function () {
-            if (desmosTool.timer) clearTimeout(desmosTool.timer);
-            desmosTool.timer = setTimeout(function () {
-                if (!globals.isequal(doc.data.desmos.state, desmosTool.calc.getState())) {
-                    console.log("onChange", desmosTool.calc.getState());
-                    doc.submitOp([{ p: ["desmos", "state"], oi: desmosTool.calc.getState() }]);
-                }
-            }, 0);
+            if (!globals.isequal(doc.data.desmos.state, desmosTool.calc.getState())) {
+                console.log("onChange", "getState", desmosTool.calc.getState(), "data.desmos.state", doc.data.desmos.state);
+                doc.submitOp([{ p: ["desmos", "state"], oi: desmosTool.calc.getState() }]);
+            }
         });
     }
 }
