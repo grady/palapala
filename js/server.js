@@ -16,7 +16,7 @@ const backend = new ShareDB({db});
 
 const WebSocket = require('ws');
 const WebSocketJSONStream = require('websocket-json-stream');
-const wss = new WebSocket.Server({port: 8080});
+const wss = new WebSocket.Server({server: server});
 
 wss.on("connection", function(ws, req){
     console.log("connection acccepted: " + (req.headers['x-forwarded-for'] || req.connection.remoteAddress) + req.url);

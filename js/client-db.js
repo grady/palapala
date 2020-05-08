@@ -7,14 +7,14 @@ $(document).ready(() => {
     let socket, conn;
     return function () {
       let url = new URL(document.location);
-      url.port = 8080;
-      url.protocol = "wss";
+      //url.port = 8080;
+      url.protocol = (url.protocol === "https") ? "wss" : "ws";
       if (!socket) socket = new ReconnectingWebSocket(url.href);
       if (!conn) conn = new ShareDb.Connection(socket);
       return conn
     }
   })();
-  globals.json = require("ot-json0").type;
+  //globals.json = require("ot-json0").type;
   //globals.diff = require("json0-ot-diff");
   globals.isequal = require("lodash.isequal");
 });
