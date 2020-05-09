@@ -2,8 +2,6 @@ let mementos = [];
 let conn;
 let doc;
 let id;
-let timer;
-
 
 $(document).ready(init);
 
@@ -55,8 +53,10 @@ function init() {
                 desmosTool.desmos.css(doc.data.desmos.css);
                 if (!desmosTool.calc)
                     initDesmos();
-                if (doc.data.desmos.state)
+                if (doc.data.desmos.state){
+                    desmosTool.setState = true;
                     desmosTool.calc.setState(doc.data.desmos.state);
+                }
             }
         }
     });
@@ -66,9 +66,9 @@ function init() {
             op.filter(i => i.p[0] === "layers").forEach(item => { replaceData(item) });
             op.filter(i => i.p[0] === "desmos").forEach(item => {
                 desmosTool.desmos.css(doc.data.desmos.css);
-                //if (doc.data.desmos.state )
                 if (!globals.isequal(doc.data.desmos.state, desmosTool.calc.getState())) {
                     console.log('setState', doc.data.desmos.state);
+                    desmosTool.setState = true;
                     desmosTool.calc.setState(doc.data.desmos.state);
                 }
             });
@@ -304,7 +304,7 @@ const desmosTool = new Tool({
     desmos: $("#desmos"),
     calc: null,
     path: null,
-    timer: null,
+    setState: false,
     onMouseDown: function (event) {
         desmosTool.path = new Shape.Rectangle(event.point, event.point);
         desmosTool.path.strokeWidth = 1;
@@ -336,12 +336,19 @@ const desmosTool = new Tool({
 
 function initDesmos() {
     if (!desmosTool.calc) {
-        desmosTool.calc = Desmos.GraphingCalculator(desmosTool.desmos[0], {expressionsCollapsed: true});
-        if (doc.data.desmos && doc.data.desmos.state)
+        desmosTool.calc = Desmos.GraphingCalculator(desmosTool.desmos[0], { expressionsCollapsed: true });
+        if (doc.data.desmos && doc.data.desmos.state){
+            desmosTool.setState = true;
             desmosTool.calc.setState(doc.data.desmos.state);
+        }
         desmosTool.calc.observeEvent('change', function () {
+            // was this triggered by setState?
+            if (desmosTool.setState){
+                desmosTool.setState = false;
+                return;
+            }
             if (!globals.isequal(doc.data.desmos.state, desmosTool.calc.getState())) {
-                console.log("onChange", "getState", desmosTool.calc.getState(), "data.desmos.state", doc.data.desmos.state);
+                console.log("submitOp", desmosTool.calc.getState());
                 doc.submitOp([{ p: ["desmos", "state"], oi: desmosTool.calc.getState() }]);
             }
         });
