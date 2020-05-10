@@ -115,6 +115,28 @@ function newLayer(blendMode) {
     doc.submitOp([{ p: ["layers", newLayer.index], li: newLayer.exportJSON({ asString: false }) }]);
 }
 
+const handTool = new paper.Tool({
+    name: "hand",
+    minDistance: 1,
+    lastPoint: null,
+    onMouseDown: event => {
+        lastPoint = paper.view.projectToView(event.point);
+    },
+    onMouseDrag: event => {
+        let point = paper.view.projectToView(event.point);
+        let last = paper.view.viewToProject(lastPoint);
+        paper.view.scrollBy(last.subtract(event.point));
+
+        let desmos = $("#desmos").offset();
+        let delta = point.subtract(lastPoint);
+        desmos.top += delta.y;
+        desmos.left += delta.x;
+
+        $("#desmos").offset(desmos);
+        lastPoint = point;
+    },
+});
+
 const penTool = new paper.Tool({
     name: "pen",
     minDistance: 2,
