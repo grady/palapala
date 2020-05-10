@@ -93,26 +93,19 @@ function clearProject(event) {
 }
 
 function activateTool(name) {
-    if (paper.tool.name === "desmos" || name === "desmos")
-        desmosTool.desmos.css("z-index", name === "desmos" ? 1 : -1);
+    if (name === "desmos"){
+        desmosTool.desmos.css({"z-index": 1, "opacity": 0.95});
+    } else if(paper.tool.name === "desmos"){
+        desmosTool.desmos.css({"z-index": -1, "opacity": 1});
+    }
+        //desmosTool.desmos.css("z-index", name === "desmos" ? 1 : -1);
     tools.find(tool => tool.name === name).activate();
 
 }
 
-function submitItem(item) {
-    //item.parent.index;
-    submitChanges();
-}
 
 function submitPath(path) {
     doc.submitOp([{ p: ["layers", project.activeLayer.index, 1, "children", path.index], li: path.exportJSON({ asString: false }) }]);
-}
-
-function newLayer(blendMode) {
-    let newLayer = blendMode ? new Layer({ blendMode: blendMode }) : new Layer();
-    newLayer.activate();
-    new Path();
-    doc.submitOp([{ p: ["layers", newLayer.index], li: newLayer.exportJSON({ asString: false }) }]);
 }
 
 const handTool = new paper.Tool({
