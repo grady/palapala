@@ -119,13 +119,13 @@ const penTool = new paper.Tool({
     name: "pen",
     minDistance: 2,
     path: null,
-    onMouseDown: function (event) {
+    onMouseDown: (event) =>  {
         penTool.path = new Path({ strokeColor: project.currentStyle.strokeColor.clone(), strokeWidth: project.currentStyle.strokeWidth });
     },
-    onMouseDrag: function (event) {
+    onMouseDrag: (event) =>  {
         if (penTool.path) penTool.path.add(event.point);
     },
-    onMouseUp: function (event) {
+    onMouseUp: (event) =>  {
         penTool.path.simplify();
         if (penTool.path.segments.length === 0) {
             penTool.path = new Path.Circle({
@@ -147,12 +147,12 @@ const brushTool = new paper.Tool({
     leftPath: null,
     rightPath: null,
     minDistance: 5,
-    onMouseDown: function (event) {
+    onMouseDown: (event) =>  {
         brushTool.path = new Path({ closed: true, fillColor: project.currentStyle.strokeColor, strokeWidth: 1, segments: [event.point] })
         brushTool.leftPath = new Path({ fillColor: project.currentStyle.strokeColor.clone(), strokeWidth: 0, segments: [event.point], insert: false })
         brushTool.rightPath = new Path({ insert: false })
     },
-    onMouseDrag: function (event) {
+    onMouseDrag: (event) =>  {
         let diff = event.delta;
         let force = event.event.type === "touchmove" ? event.event.changedTouches[0].force ** 2 : 1;
         diff.angle += 90;
@@ -162,7 +162,7 @@ const brushTool = new paper.Tool({
         brushTool.leftPath.add(lp);
         brushTool.rightPath.add(rp);
     },
-    onMouseUp: function (event) {
+    onMouseUp: (event) =>  {
         let leftPath = brushTool.leftPath, rightPath = brushTool.rightPath, path = brushTool.path;
         setTimeout(function () {
             leftPath.add(event.point);
@@ -184,16 +184,16 @@ const brushTool = new paper.Tool({
 const eraseTool = new paper.Tool({
     name: "erase",
     path: null,
-    onMouseDown: function (event) {
+    onMouseDown: (event) =>  {
         eraseTool.path = new Path({
             strokeWidth: project.currentStyle.strokeWidth * (event.modifiers.shift ? 20 : 5),
             blendMode: "destination-out"
         });
     },
-    onMouseDrag: function (event) {
+    onMouseDrag: (event) =>  {
         eraseTool.path.add(event.point);
     },
-    onMouseUp: function (event) {
+    onMouseUp: (event) =>  {
         eraseTool.path.simplify();
         submitPath(eraseTool.path);
         eraseTool.path = null;
@@ -203,13 +203,13 @@ const eraseTool = new paper.Tool({
 const circleTool = new Tool({
     name: "circle",
     path: null,
-    onMouseDown: function (event) {
+    onMouseDown: (event) =>  {
         circleTool.path = new Shape.Circle(event.point, 10);
     },
-    onMouseDrag: function (event) {
+    onMouseDrag: (event) =>  {
         circleTool.path.radius = (event.point - event.downPoint).length;
     },
-    onMouseUp: function (event) {
+    onMouseUp: (event) =>  {
         submitPath(circleTool.path);
         circleTool.path = null;
     }
@@ -221,12 +221,12 @@ const lineTool = new Tool({
     onMouseDown: event => {
         lineTool.path = new Path([event.point, event.point])
     },
-    onMouseDrag: function (event) {
+    onMouseDrag: (event) =>  {
         lineTool.path.lastSegment.point.set(event.point);
         if (event.modifiers.shift) lineTool.path.firstSegment.point.set(lineMirror(event));
         lineTool.path.firstSegment.point.set(event.modifiers.shift ? lineMirror(event) : event.downPoint);
     },
-    onMouseUp: function (event) {
+    onMouseUp: (event) =>  {
         submitPath(lineTool.path);
         lineTool.path = null;
     }
@@ -242,7 +242,7 @@ const rectTool = new Tool({
     onMouseDown: event => {
         rectTool.path = new Shape.Rectangle(event.point, event.point)
     },
-    onMouseDrag: function (event) {
+    onMouseDrag: (event) =>  {
         let size = event.point - event.downPoint;
         if (event.modifiers.shift) {
             rectTool.path.size.set(size * 2);
@@ -253,7 +253,7 @@ const rectTool = new Tool({
             rectTool.path.position.set((event.downPoint + event.point) / 2);
         }
     },
-    onMouseUp: function (event) {
+    onMouseUp: (event) =>  {
         submitPath(rectTool.path);
         rectTool.path = null
     }
@@ -262,12 +262,12 @@ const rectTool = new Tool({
 const highlightTool = new Tool({
     name: "highlight",
     path: null,
-    onMouseDown: function (event) {
+    onMouseDown: (event) =>  {
         highlightTool.path = new Path({ strokeWidth: project.currentStyle.strokeWidth * 5 });
         highlightTool.path.strokeColor.alpha = 0.4;
     },
     onMouseDrag: event => highlightTool.path.add(event.point),
-    onMouseUp: function (event) {
+    onMouseUp: (event) =>  {
         submitPath(highlightTool.path);
         highlightTool.path = null
     }
@@ -276,7 +276,7 @@ const highlightTool = new Tool({
 const axesTool = new Tool({
     name: "axes",
     path: null,
-    onMouseDown: function (event) {
+    onMouseDown: (event) =>  {
         axesTool.path = new CompoundPath({
             children: [
                 new Path([event.point, event.point]),
@@ -284,7 +284,7 @@ const axesTool = new Tool({
             ]
         })
     },
-    onMouseDrag: function (event) {
+    onMouseDrag: (event) =>  {
         let xaxis = axesTool.path.firstChild;
         let yaxis = axesTool.path.lastChild;
         let mirror = lineMirror(event);
@@ -293,7 +293,7 @@ const axesTool = new Tool({
         yaxis.firstSegment.point.setY(event.point.y);
         yaxis.lastSegment.point.setY(event.modifiers.shift ? mirror.y : event.downPoint.y);
     },
-    onMouseUp: function (event) {
+    onMouseUp: (event) =>  {
         submitPath(axesTool.path);
         axesTool.path = null
     }
@@ -305,15 +305,15 @@ const desmosTool = new Tool({
     calc: null,
     path: null,
     timer: null,
-    onMouseDown: function (event) {
+    onMouseDown: (event) =>  {
         desmosTool.path = new Shape.Rectangle(event.point, event.point);
         desmosTool.path.strokeWidth = 1;
     },
-    onMouseDrag: function (event) {
+    onMouseDrag: (event) =>  {
         desmosTool.path.size.set(event.point - event.downPoint);
         desmosTool.path.position.set((event.downPoint + event.point) / 2);
     },
-    onMouseUp: function (event) {
+    onMouseUp: (event) =>  {
         //    debugger;
         desmosTool.path.remove();
         desmosTool.path = null;
