@@ -2,8 +2,6 @@ let mementos = [];
 let conn;
 let doc;
 let id;
-let timer;
-
 
 $(document).ready(init);
 
@@ -55,8 +53,10 @@ function init() {
                 desmosTool.desmos.css(doc.data.desmos.css);
                 if (!desmosTool.calc)
                     initDesmos();
-                if (doc.data.desmos.state)
+                if (doc.data.desmos.state){
+                    desmosTool.setState = true;
                     desmosTool.calc.setState(doc.data.desmos.state);
+                }
             }
         }
     });
@@ -66,9 +66,9 @@ function init() {
             op.filter(i => i.p[0] === "layers").forEach(item => { replaceData(item) });
             op.filter(i => i.p[0] === "desmos").forEach(item => {
                 desmosTool.desmos.css(doc.data.desmos.css);
-                //if (doc.data.desmos.state )
                 if (!globals.isequal(doc.data.desmos.state, desmosTool.calc.getState())) {
                     console.log('setState', doc.data.desmos.state);
+                    desmosTool.setState = true;
                     desmosTool.calc.setState(doc.data.desmos.state);
                 }
             });
@@ -93,27 +93,42 @@ function clearProject(event) {
 }
 
 function activateTool(name) {
-    if (paper.tool.name === "desmos" || name === "desmos")
-        desmosTool.desmos.css("z-index", name === "desmos" ? 1 : -1);
+    if (name === "desmos"){
+        desmosTool.desmos.css({"z-index": 1, "opacity": 0.95});
+    } else if(paper.tool.name === "desmos"){
+        desmosTool.desmos.css({"z-index": -1, "opacity": 1});
+    }
+        //desmosTool.desmos.css("z-index", name === "desmos" ? 1 : -1);
     tools.find(tool => tool.name === name).activate();
 
 }
 
-function submitItem(item) {
-    //item.parent.index;
-    submitChanges();
-}
 
 function submitPath(path) {
     doc.submitOp([{ p: ["layers", project.activeLayer.index, 1, "children", path.index], li: path.exportJSON({ asString: false }) }]);
 }
 
-function newLayer(blendMode) {
-    let newLayer = blendMode ? new Layer({ blendMode: blendMode }) : new Layer();
-    newLayer.activate();
-    new Path();
-    doc.submitOp([{ p: ["layers", newLayer.index], li: newLayer.exportJSON({ asString: false }) }]);
-}
+const handTool = new paper.Tool({
+    name: "hand",
+    minDistance: 1,
+    lastPoint: null,
+    onMouseDown: event => {
+        lastPoint = paper.view.projectToView(event.point);
+    },
+    onMouseDrag: event => {
+        let point = paper.view.projectToView(event.point);
+        let last = paper.view.viewToProject(lastPoint);
+        paper.view.scrollBy(last.subtract(event.point));
+
+        let desmos = $("#desmos").offset();
+        let delta = point.subtract(lastPoint);
+        desmos.top += delta.y;
+        desmos.left += delta.x;
+
+        $("#desmos").offset(desmos);
+        lastPoint = point;
+    },
+});
 
 const penTool = new paper.Tool({
     name: "pen",
@@ -304,7 +319,7 @@ const desmosTool = new Tool({
     desmos: $("#desmos"),
     calc: null,
     path: null,
-    timer: null,
+    setState: false,
     onMouseDown: (event) =>  {
         desmosTool.path = new Shape.Rectangle(event.point, event.point);
         desmosTool.path.strokeWidth = 1;
@@ -336,12 +351,19 @@ const desmosTool = new Tool({
 
 function initDesmos() {
     if (!desmosTool.calc) {
-        desmosTool.calc = Desmos.GraphingCalculator(desmosTool.desmos[0], {expressionsCollapsed: true});
-        if (doc.data.desmos && doc.data.desmos.state)
+        desmosTool.calc = Desmos.GraphingCalculator(desmosTool.desmos[0], { expressionsCollapsed: true });
+        if (doc.data.desmos && doc.data.desmos.state){
+            desmosTool.setState = true;
             desmosTool.calc.setState(doc.data.desmos.state);
+        }
         desmosTool.calc.observeEvent('change', function () {
+            // was this triggered by setState?
+            if (desmosTool.setState){
+                desmosTool.setState = false;
+                return;
+            }
             if (!globals.isequal(doc.data.desmos.state, desmosTool.calc.getState())) {
-                console.log("onChange", "getState", desmosTool.calc.getState(), "data.desmos.state", doc.data.desmos.state);
+                console.log("submitOp", desmosTool.calc.getState());
                 doc.submitOp([{ p: ["desmos", "state"], oi: desmosTool.calc.getState() }]);
             }
         });
