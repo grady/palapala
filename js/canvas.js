@@ -85,13 +85,11 @@ function clearProject(event) {
 
 function activateTool(name) {
     if (name === "desmos") {
-        desmosTool.desmos.css({ "z-index": 1, "opacity": 0.95 });
+        desmosTool.desmos && desmosTool.desmos.css({ "z-index": 1, "opacity": 0.95 });
     } else if (paper.tool.name === "desmos") {
-        desmosTool.desmos.css({ "z-index": -1, "opacity": 1 });
+        desmosTool.desmos && desmosTool.desmos.css({ "z-index": -1, "opacity": 1 });
     }
-    //desmosTool.desmos.css("z-index", name === "desmos" ? 1 : -1);
     tools.find(tool => tool.name === name).activate();
-
 }
 
 
@@ -400,7 +398,7 @@ function replaceData(op) {
     }
     let path = op.p.filter((item, index) => (index - 2) % 3);
     let testObj, oldObj = project;
-    for (let ii = 0; ii < path.length; ii += 2) {
+    for (let ii = 0; ii < path.length; ii += 2) { // ["layers", 0, /*1*/, "children", 3, /*1*/, ... ]
         testObj = oldObj[path[ii]][path[ii + 1]];
         if (testObj) oldObj = testObj;
     }
