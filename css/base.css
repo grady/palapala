@@ -6,6 +6,7 @@ body {
     padding:0;
     background: white url(../img/grey_dot_40.svg) repeat fixed;
     touch-action: none;
+    overflow: hidden;
 }
 canvas {
     border: 0;
