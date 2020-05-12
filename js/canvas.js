@@ -43,9 +43,7 @@ function init() {
     doc = conn.get('palapala', id[0]);
     doc.on('load', function () {
         if (doc.type == null) {
-            project.clear();
-            (new Layer()).activate();
-            new Path();
+            initProject();
             doc.create({ layers: project.exportJSON({ asString: false }), desmos: null });
         } else {
             project.importJSON(doc.data.layers);
@@ -78,17 +76,16 @@ function init() {
     globals.doc = doc;
 }
 
-function submitChanges() {
-    let diff = globals.diff(doc.data.layers, project.exportJSON({ asString: false }));
-    diff.forEach(item => item.p.unshift("layers"));
-    //debugger;
-    if (diff.length) { doc.submitOp(diff); }
+function initProject() {
+    project.clear();
+    (new Layer({ name: "mainLayer" })).activate();
+    new Path();
+    (new Layer({ name: "toolLayer" })).activate();
+    new Path();
 }
 
 function clearProject(event) {
-    project.clear();
-    (new Layer()).activate();
-    new Path();
+    initProject();
     doc.submitOp([{ p: ["layers"], od: doc.data.layers, oi: project.exportJSON({ asString: false }) }]);
 }
 
@@ -105,7 +102,8 @@ function activateTool(name) {
 
 
 function submitPath(path) {
-    doc.submitOp([{ p: ["layers", project.activeLayer.index, 1, "children", path.index], li: path.exportJSON({ asString: false }) }]);
+    project.layers["mainLayer"].addChild(path);
+    doc.submitOp([{ p: ["layers", project.layers["mainLayer"].index, 1, "children", path.index], li: path.exportJSON({ asString: false }) }]);
 }
 
 const handTool = new paper.Tool({
@@ -377,9 +375,10 @@ function initDesmos() {
 }
 
 function undo(event) {
-    let item = project.activeLayer.lastChild;
+    let item = project.layers["mainLayer"].lastChild;
     if (item) {
         mementos.push(item);
+        doc.submitOp([{ p: ["layers", 0, 1, "children", item.index], ld: item.exportJSON({ asString: false }) }]);
         item.remove();
         $("#redoButton").removeAttr("disabled");
     }
@@ -388,7 +387,10 @@ function undo(event) {
 function redo(event) {
     let item = mementos.pop();
     if (mementos.length == 0) $("#redoButton").prop('disabled', true);
-    if (item) project.activeLayer.addChild(item);
+    if (item) {
+        project.layers["mainLayer"].addChild(item);
+        submitPath(item);
+    }
 }
 
 function clearUndo() {
@@ -408,5 +410,10 @@ function replaceData(op) {
         testObj = oldObj[path[ii]][path[ii + 1]];
         if (testObj) oldObj = testObj;
     }
-    oldObj.importJSON(op.li);
+
+    if (op.ld)
+        oldObj.remove();
+
+    if (op.li)
+        oldObj.importJSON(op.li);
 }
