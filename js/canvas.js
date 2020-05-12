@@ -44,17 +44,13 @@ function init() {
     doc.on('load', function () {
         if (doc.type == null) {
             initProject();
-            doc.create({ layers: project.exportJSON({ asString: false }), desmos: null });
+            doc.create({ layers: project.exportJSON({ asString: false }), desmos: null, undo: [] });
         } else {
+            project.clear();
             project.importJSON(doc.data.layers);
             if (doc.data.desmos) {
+                desmosTool.initDesmos();
                 desmosTool.desmos.css(doc.data.desmos.css);
-                if (!desmosTool.calc)
-                    initDesmos();
-                if (doc.data.desmos.state) {
-                    desmosTool.setState = true;
-                    desmosTool.calc.setState(doc.data.desmos.state);
-                }
             }
         }
     });
@@ -65,9 +61,7 @@ function init() {
             op.filter(i => i.p[0] === "desmos").forEach(item => {
                 desmosTool.desmos.css(doc.data.desmos.css);
                 if (!globals.isequal(doc.data.desmos.state, desmosTool.calc.getState())) {
-                    console.log('setState', doc.data.desmos.state);
-                    desmosTool.setState = true;
-                    desmosTool.calc.setState(doc.data.desmos.state);
+                    desmosTool.setState(doc.data.desmos.state);
                 }
             });
         }
@@ -314,10 +308,11 @@ const axesTool = new Tool({
 
 const desmosTool = new Tool({
     name: "desmos",
-    desmos: $("#desmos"),
+    desmos: null,
     calc: null,
     path: null,
-    setState: false,
+    //setState: false,
+    localChange: false,
     onMouseDown: (event) => {
         if (!desmosTool.calc || event.modifiers.shift) {
             desmosTool.path = new Shape.Rectangle(event.point, event.point);
@@ -343,36 +338,35 @@ const desmosTool = new Tool({
                 width: rect.width,
                 height: rect.height,
             }
+            desmosTool.initDesmos();
             desmosTool.desmos.css(css);
-
-            if (!desmosTool.calc) {
-                initDesmos();
-            }
             doc.submitOp([{ p: ["desmos"], oi: { css: css, state: desmosTool.calc.getState() } }]);
         }
+    },
+    changeWatcher: () => {
+        if (!desmosTool.localChange) {
+            let state = desmosTool.calc.getState();
+            if (!globals.isequal(doc.data.desmos.state, state)) {
+                console.log("submitOp", state);
+                doc.submitOp([{ p: ["desmos", "state"], oi: state }]);
+            }
+        }
+        else desmosTool.localChange = false;
+    },
+    setState: (state) => {
+        desmosTool.localChange = true;
+        desmosTool.calc.setState(state);
+        console.log("setState", state);
+    },
+    initDesmos: () => {
+        desmosTool.desmos = $("#desmos");
+        if (!desmosTool.calc)
+            desmosTool.calc = Desmos.GraphingCalculator(desmosTool.desmos[0], { expressionsCollapsed: true });
+        desmosTool.calc.observeEvent("change", desmosTool.changeWatcher);
+        if (doc.data.desmos && doc.data.desmos.state)
+            desmosTool.setState(doc.data.desmos.state);
     }
 });
-
-function initDesmos() {
-    if (!desmosTool.calc) {
-        desmosTool.calc = Desmos.GraphingCalculator(desmosTool.desmos[0], { expressionsCollapsed: true });
-        if (doc.data.desmos && doc.data.desmos.state) {
-            desmosTool.setState = true;
-            desmosTool.calc.setState(doc.data.desmos.state);
-        }
-        desmosTool.calc.observeEvent('change', function () {
-            // was this triggered by setState?
-            if (desmosTool.setState) {
-                desmosTool.setState = false;
-                return;
-            }
-            if (!globals.isequal(doc.data.desmos.state, desmosTool.calc.getState())) {
-                console.log("submitOp", desmosTool.calc.getState());
-                doc.submitOp([{ p: ["desmos", "state"], oi: desmosTool.calc.getState() }]);
-            }
-        });
-    }
-}
 
 function undo(event) {
     let item = project.layers["mainLayer"].lastChild;
@@ -410,10 +404,6 @@ function replaceData(op) {
         testObj = oldObj[path[ii]][path[ii + 1]];
         if (testObj) oldObj = testObj;
     }
-
-    if (op.ld)
-        oldObj.remove();
-
-    if (op.li)
-        oldObj.importJSON(op.li);
+    if (op.ld) oldObj.remove();
+    if (op.li) oldObj.importJSON(op.li);
 }
