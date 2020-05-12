@@ -1,5 +1,4 @@
 let mementos = [];
-let conn;
 let doc;
 let id;
 
@@ -25,7 +24,6 @@ function init() {
 
     $("#clearButton").click(clearProject);
     $("input[name=tool]").click(event => activateTool(event.target.value));
-    //$("input[name=tool]").click(event => tools.find(tool => tool.name == event.target.value).activate());
 
     $("#sizeSlider").change(event => project.currentStyle.strokeWidth = event.target.value);
     $("#undoButton").click(undo);
@@ -38,9 +36,8 @@ function init() {
 
     globals.paper = paper;
 
-    conn = globals.socket();
     id = window.location.pathname.split("/").filter(v => v);
-    doc = conn.get('palapala', id[0]);
+    doc = globals.socket().get('palapala', id[0]);
     doc.on('load', function () {
         if (doc.type == null) {
             initProject();
