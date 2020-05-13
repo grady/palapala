@@ -65,11 +65,11 @@ function init() {
     });
     doc.subscribe();
     
-    if(id[1] !== 'view') {
-        penTool.activate(); 
-    } else {
+    if(id[1] === 'view') {
         $('.main-tools').hide();
         handTool.activate();
+    } else {
+        penTool.activate(); 
     }
     globals.doc = doc;
 }
