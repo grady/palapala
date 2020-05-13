@@ -32,7 +32,7 @@ function init() {
     project.currentStyle.strokeWidth = $("#sizeSlider").val();
     project.currentStyle.strokeCap = "round";
     project.currentStyle.strokeJoin = "round";
-    penTool.activate();
+    
 
     globals.paper = paper;
 
@@ -64,6 +64,13 @@ function init() {
         }
     });
     doc.subscribe();
+    
+    if(id[1] !== 'view') {
+        penTool.activate(); 
+    } else {
+        $('.main-tools').hide();
+        handTool.activate();
+    }
     globals.doc = doc;
 }
 

@@ -4,6 +4,7 @@ const path = require('path')
 const shortid = require('shortid');
 
 app.use("/:id/", express.static(path.join(__dirname, "..")));
+app.use("/:id/view/", express.static(path.join(__dirname, "..")));
 app.use("/", (req,res) =>{
     res.redirect("/" + shortid.generate());
 });
