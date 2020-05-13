@@ -5,14 +5,16 @@ const shortid = require('shortid');
 
 app.use("/:id/", express.static(path.join(__dirname, "..")));
 app.use("/:id/view/", express.static(path.join(__dirname, "..")));
-app.use("/", (req,res) =>{
+app.use("/", (req,res) => {
     res.redirect("/" + shortid.generate());
 });
 
-const server = app.listen(8000);
+const server = app.listen(process.env.PORT || 8000);
 const ShareDB = require('sharedb');
 const mongodb = require("mongodb");
-const db = require("sharedb-mongo")({mongo: cb => {mongodb.connect(process.env.MONGO_URL, {useUnifiedTopology: true}, cb)}});
+const db = require("sharedb-mongo")({
+    mongo: cb => mongodb.connect(process.env.MONGO_URL, {useUnifiedTopology: true}, cb)
+});
 const backend = new ShareDB({db});
 
 const WebSocket = require('ws');
