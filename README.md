@@ -17,9 +17,9 @@ $ npm build
 ```
 Currently you also need to create a soft link pointing `lib` to `node_modules`. (see TODO)
 
-The use of a MongoDB backend is hardcoded right now. You must provide the database connection URL as an environment variable `MONGO_URL` 
+If environment variable `MONGO_URL` is set, ShareDB will use a MongoDB backend. Othwewise it uses ShareDB's in-memory database test backend.
 
-The start script runs `nodemon  js/server.js` and starts listening on port 8000.
+The start script runs `nodemon  js/server.js` and starts listening on env var PORT || 8000.
 ```
 $ MONGO_URL="[...secret...]" npm start 
 ```
