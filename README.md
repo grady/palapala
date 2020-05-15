@@ -14,26 +14,28 @@ $ git clone [...]
 $ cd palapala
 $ npm install .
 $ npm build
+$ npm dist
 ```
-Currently you also need to create a soft link pointing `lib` to `node_modules`. (see TODO)
+
 
 If environment variable `MONGO_URL` is set, ShareDB will use a MongoDB backend. Othwewise it uses ShareDB's in-memory database test backend.
+
+If you set `GKEY` and `GSECRET` it will attempt to use Google's OAuth2 API to login.
 
 The start script runs `nodemon  js/server.js` and starts listening on env var PORT || 8000.
 ```
 $ MONGO_URL="[...secret...]" npm start 
 ```
-Once the server is running direct a browser to `localhost:8000`
+Once the server is running direct a browser to `localhost:8000`. You will be redirected to a randomly generated document id `/:id/`
 
+`/:id/view/` gives a view-only interface with no controls other than pan. (Currently only a client side toolbar CSS `display: none`.)
 
 # TODO
 
-- Build should copy all files intended for webhosting into a static `dist/` directory.
 - Authentication! (Currently everyone has full write access to all documents.)
     + Edit/View modes
     + List/tree of user's documents.
 - Multi-page whiteboards
 - SVG export
 - Placing images
-- Options for backend. If no `MONGO_URL` is provided, it should fall back on the ShareDB in-memory database (non persistant)?
 
