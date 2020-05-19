@@ -48,11 +48,9 @@ input[type=range][orient=vertical]
     width: 8px;
     height: 100px;
 }
-#clearConfirm{
+.main-tools .dropdown-menu{
     padding: 0;
     border: 0;
     margin-left: -1px;
     min-width: 0;
-    border-top-left-radius: 0;
-    border-bottom-left-radius: 0;
 }
