@@ -48,8 +48,7 @@ function init() {
             if (doc.data.desmos) {
                 desmosTool.initDesmos();
                 //debugger                       
-                desmosTool.path.importJSON(doc.data.desmos.rect);         
-                
+                desmosTool.path.importJSON(doc.data.desmos.rect);
                 desmosTool.setPosition();
                 desmosTool.desmos.css("zIndex", -1);
                 desmosTool.setState(doc.data.desmos.state);
@@ -353,12 +352,14 @@ const desmosTool = new Tool({
     setPosition: () => {
         let topLeft = paper.view.projectToView(desmosTool.path.bounds.topLeft);
         let size = (paper.view.projectToView(desmosTool.path.bounds.bottomRight) - topLeft).abs();
-        desmosTool.desmos.css({
-            left: topLeft.x,
-            top: topLeft.y,
-            width: size.x,
-            height: size.y,
-        })
+        let curPos = desmosTool.desmos.css(['top', 'left', 'width', 'height']);
+        if (topLeft.x !== curPos.left || topLeft.y !== curPos.y || size.x !== curPos.width || size.y !== curPos.height)
+            desmosTool.desmos.css({
+                left: topLeft.x,
+                top: topLeft.y,
+                width: size.x,
+                height: size.y,
+            })
     },
     changeWatcher: () => {
         if (!desmosTool.localChange) {
@@ -381,11 +382,12 @@ const desmosTool = new Tool({
         }
         if (!desmosTool.desmos) {
             desmosTool.desmos = $("<div id='desmos' style='position:absolute;z-index:1'></div>");
-            $('body').prepend(desmosTool.desmos);
+            desmosTool.desmos.insertBefore("#canvas");
         }
-        if (!desmosTool.calc)
+        if (!desmosTool.calc) {
             desmosTool.calc = Desmos.GraphingCalculator(desmosTool.desmos[0], { expressionsCollapsed: true });
-        desmosTool.calc.observeEvent("change", desmosTool.changeWatcher);
+            desmosTool.calc.observeEvent("change", desmosTool.changeWatcher);
+        }
     }
 });
 
