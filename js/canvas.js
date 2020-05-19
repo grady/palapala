@@ -60,11 +60,13 @@ function init() {
             console.log(op);
             op.filter(i => i.p[0] === "layers").forEach(item => { replaceData(item) });
             op.filter(i => i.p[0] === "desmos").forEach(item => {
-                desmosTool.initDesmos();
-                desmosTool.path.importJSON(doc.data.desmos.rect);
-                desmosTool.setPosition();
-                if (!globals.isequal(doc.data.desmos.state, desmosTool.calc.getState())) {
+                if (doc.data.desmos) {
+                    desmosTool.initDesmos();
+                    desmosTool.path.importJSON(doc.data.desmos.rect);
+                    desmosTool.setPosition();
                     desmosTool.setState(doc.data.desmos.state);
+                } else {
+                    desmosTool.destroyDesmos();
                 }
             });
         }
@@ -324,10 +326,16 @@ const desmosTool = new Tool({
     //setState: false,
     localChange: false,
     onMouseDown: (event) => {
-        if (!desmosTool.path) {
-            desmosTool.path = new Shape.Rectangle({ from: event.point, to: event.point, strokeWidth: 1 });
+        if (event.event.button ===2 && desmosTool.calc) {
+            desmosTool.destroyDesmos();
+            doc.submitOp([{ p: ["desmos"], oi: null }]);
+            event.preventDefault();
         } else {
-            desmosTool.path.visible = true;
+            if (!desmosTool.path) {
+                desmosTool.path = new Shape.Rectangle({ from: event.point, to: event.point, strokeWidth: 1 });
+            } else if (event.event.button !== 2) {
+                desmosTool.path.visible = true;
+            }
         }
     },
     onMouseDrag: (event) => {
@@ -339,13 +347,10 @@ const desmosTool = new Tool({
     },
     onMouseUp: (event) => {
         //    debugger;
-        if (desmosTool.path) {
+        if (desmosTool.path && event.event.button !== 2) {
             desmosTool.initDesmos();
             desmosTool.setPosition();
             desmosTool.path.visible = false;
-            //let css = desmosTool.desmos.css(['width', 'height', 'top', 'left']);
-            //let topLeft = paper.view.viewToProject(Point(css.left, css.top));
-            //debugger
             doc.submitOp([{ p: ["desmos"], oi: { rect: desmosTool.path.exportJSON({ asString: false }), state: desmosTool.calc.getState() } }]);
         }
     },
@@ -381,13 +386,21 @@ const desmosTool = new Tool({
             desmosTool.path = new Shape.Rectangle({ strokeWidth: 1, visible: false });
         }
         if (!desmosTool.desmos) {
-            desmosTool.desmos = $("<div id='desmos' style='position:absolute;z-index:1'></div>");
+            desmosTool.desmos = $("<div id='desmos' style='position:absolute;z-index:1;opacity:0.95;'></div>");
             desmosTool.desmos.insertBefore("#canvas");
         }
         if (!desmosTool.calc) {
             desmosTool.calc = Desmos.GraphingCalculator(desmosTool.desmos[0], { expressionsCollapsed: true });
             desmosTool.calc.observeEvent("change", desmosTool.changeWatcher);
         }
+    },
+    destroyDesmos: () => {
+        if (desmosTool.desmos)
+            desmosTool.desmos.remove();
+        desmosTool.desmos = null;
+        if (desmosTool.calc)
+            desmosTool.calc.destroy();
+        desmosTool.calc = null;
     }
 });
 
