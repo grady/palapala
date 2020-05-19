@@ -5,7 +5,11 @@ const shortid = require('shortid');
 let session = require('express-session');
 let passport, GoogleStrategy;
 
-app.use(session({ secret: 'palapala' }));
+app.use(session({ 
+    secret: 'palapala',
+    resave: false,
+    saveUninitialized: true
+}));
 
 if (process.env.GSECRET) {
 
