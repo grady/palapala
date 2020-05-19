@@ -95,6 +95,8 @@ function initProject() {
 function clearProject(event) {
     initProject();
     doc.submitOp([{ p: ["layers"], od: doc.data.layers, oi: project.exportJSON({ asString: false }) }]);
+    desmosTool.destroyDesmos();
+    doc.submitOp([{ p: ["desmos"], oi: null }]);
 }
 
 function activateTool(name) {
