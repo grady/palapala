@@ -32,7 +32,7 @@ function init() {
     project.currentStyle.strokeWidth = $("#sizeSlider").val();
     project.currentStyle.strokeCap = "round";
     project.currentStyle.strokeJoin = "round";
-    
+
 
     globals.paper = paper;
 
@@ -47,7 +47,12 @@ function init() {
             project.importJSON(doc.data.layers);
             if (doc.data.desmos) {
                 desmosTool.initDesmos();
-                desmosTool.desmos.css(doc.data.desmos.css);
+                //debugger                       
+                desmosTool.path.importJSON(doc.data.desmos.rect);         
+                
+                desmosTool.setPosition();
+                desmosTool.desmos.css("zIndex", -1);
+                desmosTool.setState(doc.data.desmos.state);
             }
         }
     });
@@ -56,7 +61,9 @@ function init() {
             console.log(op);
             op.filter(i => i.p[0] === "layers").forEach(item => { replaceData(item) });
             op.filter(i => i.p[0] === "desmos").forEach(item => {
-                desmosTool.desmos.css(doc.data.desmos.css);
+                desmosTool.initDesmos();
+                desmosTool.path.importJSON(doc.data.desmos.rect);
+                desmosTool.setPosition();
                 if (!globals.isequal(doc.data.desmos.state, desmosTool.calc.getState())) {
                     desmosTool.setState(doc.data.desmos.state);
                 }
@@ -64,12 +71,12 @@ function init() {
         }
     });
     doc.subscribe();
-    
-    if(id[1] === 'view') {
+
+    if (id[1] === 'view') {
         $('.main-tools').hide();
         handTool.activate();
     } else {
-        penTool.activate(); 
+        penTool.activate();
     }
     globals.doc = doc;
 }
@@ -89,9 +96,9 @@ function clearProject(event) {
 
 function activateTool(name) {
     if (name === "desmos") {
-        desmosTool.desmos && desmosTool.desmos.css({ "z-index": 1, "opacity": 0.95 });
+        desmosTool.desmos && desmosTool.desmos.css({ zIndex: 1, opacity: 0.95 });
     } else if (paper.tool.name === "desmos") {
-        desmosTool.desmos && desmosTool.desmos.css({ "z-index": -1, "opacity": 1 });
+        desmosTool.desmos && desmosTool.desmos.css({ zIndex: -1, opacity: 1 });
     }
     tools.find(tool => tool.name === name).activate();
 }
@@ -114,12 +121,14 @@ const handTool = new paper.Tool({
         let last = paper.view.viewToProject(lastPoint);
         paper.view.scrollBy(last.subtract(event.point));
 
-        let desmos = $("#desmos").offset();
-        let delta = point.subtract(lastPoint);
-        desmos.top += delta.y;
-        desmos.left += delta.x;
+        if (desmosTool.desmos) {
+            let offset = desmosTool.desmos.offset();
+            let delta = point.subtract(lastPoint);
+            offset.top += delta.y;
+            offset.left += delta.x;
 
-        $("#desmos").offset(desmos);
+            desmosTool.desmos.offset(offset);
+        }
         lastPoint = point;
     },
 });
@@ -316,12 +325,14 @@ const desmosTool = new Tool({
     //setState: false,
     localChange: false,
     onMouseDown: (event) => {
-        if (!desmosTool.calc || event.modifiers.shift) {
-            desmosTool.path = new Shape.Rectangle(event.point, event.point);
-            desmosTool.path.strokeWidth = 1;
+        if (!desmosTool.path) {
+            desmosTool.path = new Shape.Rectangle({ from: event.point, to: event.point, strokeWidth: 1 });
+        } else {
+            desmosTool.path.visible = true;
         }
     },
     onMouseDrag: (event) => {
+        if ((event.downPoint - event.point).length < 20) return;
         if (desmosTool.path) {
             desmosTool.path.size.set(event.point - event.downPoint);
             desmosTool.path.position.set((event.downPoint + event.point) / 2);
@@ -330,20 +341,24 @@ const desmosTool = new Tool({
     onMouseUp: (event) => {
         //    debugger;
         if (desmosTool.path) {
-            desmosTool.path.remove();
-            desmosTool.path = null;
-            let rect = new Rectangle(event.downPoint, event.point);
-            let css = {
-                display: "inherit",
-                left: rect.left,
-                top: rect.top,
-                width: rect.width,
-                height: rect.height,
-            }
             desmosTool.initDesmos();
-            desmosTool.desmos.css(css);
-            doc.submitOp([{ p: ["desmos"], oi: { css: css, state: desmosTool.calc.getState() } }]);
+            desmosTool.setPosition();
+            desmosTool.path.visible = false;
+            //let css = desmosTool.desmos.css(['width', 'height', 'top', 'left']);
+            //let topLeft = paper.view.viewToProject(Point(css.left, css.top));
+            //debugger
+            doc.submitOp([{ p: ["desmos"], oi: { rect: desmosTool.path.exportJSON({ asString: false }), state: desmosTool.calc.getState() } }]);
         }
+    },
+    setPosition: () => {
+        let topLeft = paper.view.projectToView(desmosTool.path.bounds.topLeft);
+        let size = (paper.view.projectToView(desmosTool.path.bounds.bottomRight) - topLeft).abs();
+        desmosTool.desmos.css({
+            left: topLeft.x,
+            top: topLeft.y,
+            width: size.x,
+            height: size.y,
+        })
     },
     changeWatcher: () => {
         if (!desmosTool.localChange) {
@@ -361,12 +376,16 @@ const desmosTool = new Tool({
         console.log("setState", state);
     },
     initDesmos: () => {
-        desmosTool.desmos = $("#desmos");
+        if (!desmosTool.path) {
+            desmosTool.path = new Shape.Rectangle({ strokeWidth: 1, visible: false });
+        }
+        if (!desmosTool.desmos) {
+            desmosTool.desmos = $("<div id='desmos' style='position:absolute;z-index:1'></div>");
+            $('body').prepend(desmosTool.desmos);
+        }
         if (!desmosTool.calc)
             desmosTool.calc = Desmos.GraphingCalculator(desmosTool.desmos[0], { expressionsCollapsed: true });
         desmosTool.calc.observeEvent("change", desmosTool.changeWatcher);
-        if (doc.data.desmos && doc.data.desmos.state)
-            desmosTool.setState(doc.data.desmos.state);
     }
 });
 
