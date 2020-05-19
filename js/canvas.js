@@ -14,11 +14,13 @@ function init() {
         togglePaletteLessText: "<",
         hideAfterPaletteSelect: true,
         palette: [
-            ["black", "red"],
-            ["mediumseagreen", "mediumblue"],
-            ["mediumorchid", "darkorange"]
+            ["black", "red", "whitesmoke"],
+            ["mediumseagreen", "mediumblue", "gold"],
+            ["mediumorchid", "darkorange", "turquoise"]
         ],
-        replacerClassName: "sp-replacer btn btn-secondary bg-secondary",
+        showAlpha: true,
+        replacerClassName: "btn btn-secondary bg-secondary",
+        appendTo: '.body',
         change: color => project.currentStyle.strokeColor.set(color.toRgbString())
     });
 

@@ -19,15 +19,14 @@ canvas[data-paper-resize]{
 .sp-dd {
     display:none;
 }
+.sp-preview{
+    margin: 0;
+}
 .sp-palette-container {
     background-color: #6c757d;
-    border-color: black;
 }
 .sp-palette .sp-thumb-el{
     border-color:black
-}
-.sp-preview{
-    margin: 0;
 }
 .main-tools {
     position: absolute;
