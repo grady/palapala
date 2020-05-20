@@ -44,6 +44,7 @@ function init() {
         activateTool($("input:checked[name=tool").val());
     });
     $("#mathQuill").on('show.bs.dropdown', (event) => {
+        quillTool.initQuill();
         activateTool("quill");
     });
 
@@ -458,7 +459,7 @@ const quillTool = new Tool({
         }
     }
 });
-quillTool.initQuill();
+
 
 function undo(event) {
     let item = project.layers["mainLayer"].lastChild;
