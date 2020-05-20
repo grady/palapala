@@ -62,7 +62,7 @@ function init() {
                 desmosTool.setPosition();
                 desmosTool.setState(doc.data.desmos.state);
             }
-            if (doc.data.undo.length){
+            if (doc.data.undo.length) {
                 $("#redoButton").removeAttr("disabled");
             } else {
                 $("#redoButton").prop("disabled", true);
@@ -89,7 +89,7 @@ function init() {
                         }
                         break;
                     case "undo":
-                        if (doc.data.undo.length){
+                        if (doc.data.undo.length) {
                             $("#redoButton").removeAttr("disabled");
                         } else {
                             $("#redoButton").prop("disabled", true);
@@ -159,20 +159,14 @@ const handTool = new paper.Tool({
         lastPoint = paper.view.projectToView(event.point);
     },
     onMouseDrag: event => {
-        let point = paper.view.projectToView(event.point);
         let last = paper.view.viewToProject(lastPoint);
-        paper.view.scrollBy(last.subtract(event.point));
-
+        lastPoint = paper.view.projectToView(event.point);
+        paper.view.scrollBy(last - event.point);
         if (desmosTool.desmos) {
-            let offset = desmosTool.desmos.offset();
-            let delta = point.subtract(lastPoint);
-            offset.top += delta.y;
-            offset.left += delta.x;
-
-            desmosTool.desmos.offset(offset);
+            desmosTool.desmos.css(cssPosition(desmosTool.path.bounds));
         }
-        lastPoint = point;
-    },
+        if (quillTool.rect) { quillTool.setPosition(); }
+    }
 });
 
 const penTool = new paper.Tool({
@@ -397,16 +391,9 @@ const desmosTool = new Tool({
         }
     },
     setPosition: () => {
-        let topLeft = paper.view.projectToView(desmosTool.path.bounds.topLeft);
-        let size = (paper.view.projectToView(desmosTool.path.bounds.bottomRight) - topLeft).abs();
-        let curPos = desmosTool.desmos.css(['top', 'left', 'width', 'height']);
-        if (topLeft.x !== curPos.left || topLeft.y !== curPos.y || size.x !== curPos.width || size.y !== curPos.height)
-            desmosTool.desmos.css({
-                left: topLeft.x,
-                top: topLeft.y,
-                width: size.x,
-                height: size.y,
-            })
+        let css = cssPosition(desmosTool.path.bounds);
+        if (!globals.isequal(css, desmosTool.desmos.css(['left', 'top', 'width', 'height'])))
+            desmosTool.desmos.css(css);
     },
     changeWatcher: () => {
         if (!desmosTool.localChange) {
@@ -453,27 +440,49 @@ const quillTool = new Tool({
     input: null,
     field: null,
     onMouseDown: (event) => {
-        if (!quillTool.rect) {
-            quillTool.rect = Shape.Rectangle({ from: event.point, to: event.point, strokeWidth: 1 })
+        if (quillTool.rect) {
+            quillTool.rect.remove();
         }
-        quillTool.rect.visible = true;
+        quillTool.rect = new Path.Line({ from: event.point, to: event.point, strokeWidth: 1 })
     },
     onMouseDrag: (event) => {
         if (quillTool.rect) {
-            quillTool.rect.size.set(event.point - event.downPoint);
-            quillTool.rect.position.set((event.point + event.downPoint) / 2);
+            quillTool.rect.lastSegment.point.y = event.point.y;
         }
     },
     onMouseUp: (event) => {
         quillTool.initQuill();
         quillTool.rect.visible = false;
-        quillTool.field.css({ left: quillTool.rect.bounds.left, top: quillTool.rect.bounds.center.y, transform: "translateY(-50%)", fontSize: quillTool.rect.bounds.height });
+        quillTool.setPosition(quillTool.rect.bounds);
+        quillTool.rect.remove()
+        quillTool.rect = new Shape.Rectangle({rectangle:projectPosition(quillTool.field), visible: false});
+    },
+    setPosition: (rectangle) => {
+        let css = cssPosition(rectangle || quillTool.rect.bounds);
+        if (rectangle) {
+            if (css.height) {
+                css.fontSize = css.height;
+                css.top += css.height / 2;
+                css.transform = "translateY(-50%)";
+            }
+        } else {
+            css.transform = "initial";
+        }
+        delete css.width;
+        delete css.height;
+
+        quillTool.field.css(css);
     },
     initQuill: () => {
         if (!quillTool.input) {
             quillTool.input = quillTool.MQ.MathField($("#mqinput")[0], {
                 handlers: {
-                    edit: () => quillTool.field.data('mq').latex(quillTool.input.latex())
+                    edit: () => {
+                        quillTool.field.data('mq').latex(quillTool.input.latex())
+                        let rect = projectPosition(quillTool.field);
+                        quillTool.rect.position = rect.center;
+                        quillTool.rect.size = rect.size;
+                    }
                 }
             });
         }
@@ -484,9 +493,27 @@ const quillTool = new Tool({
             let center = paper.view.center;
             quillTool.field.css({ left: center.x, top: center.y })
         }
+        if (!quillTool.rect) {
+            quillTool.rect = new Shape.Rectangle({ visible: false });
+        }
     }
 });
 
+function cssPosition(rectangle) {
+    if (!rectangle.intersects(paper.view.bounds)) {
+        return { display: "none" }
+    }
+    let topLeft = paper.view.projectToView(rectangle.topLeft);
+    let size = (paper.view.projectToView(rectangle.bottomRight) - topLeft).abs();
+    return { left: topLeft.x, top: topLeft.y, width: size.x, height: size.y, display: "initial" }
+}
+
+function projectPosition(elt){
+    let offset = elt.offset()
+    let topLeft = paper.view.viewToProject(new Point(offset.left, offset.top));
+    let bottomRight= paper.view.viewToProject(new Point(offset.left + elt.width(), offset.top + elt.height()));
+    return new Rectangle(topLeft, bottomRight);
+}
 
 function undo(event) {
     let item = project.layers["mainLayer"].lastChild;
