@@ -47,9 +47,32 @@ input[type=range][orient=vertical]
     width: 8px;
     height: 100px;
 }
-.main-tools .dropdown-menu{
+.main-tools .tight .dropdown-menu{
     padding: 0;
     border: 0;
     margin-left: -1px;
     min-width: 0;
+}
+.mq-math-mode .mq-overline, .mq-math-mode .mq-denominator{
+    border-top-width: 0.05em;
+}
+.mq-math-mode .mq-underline{
+    border-bottom-width: 0.05em;
+}
+.mq-math-mode .mq-sqrt-stem {
+    border-top-width: 0.05em;
+    margin-top: 0.1em;
+    padding-top: 0.05em;
+}
+.mq-math-mode .mq-overarrow {
+    margin: 0.15em 0.1em 0 0.1em;
+    border-top-width: 0.05em;
+}
+.mq-math-mode .mq-overarrow::before {
+    font-size: 0.4em;
+    top: -0.5em;
+    transform: translateX(0.2em);
+}
+.mq-math-mode .mq-overarrow.mq-arrow-left::before {
+    transform: scaleX(-1) translateX(0.2em);
 }

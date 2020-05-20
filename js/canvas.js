@@ -38,6 +38,15 @@ function init() {
 
     globals.paper = paper;
 
+    /* This keeps the dropdown menu open until you click on the button again or tab away. */
+    $("#mathQuill").on('hide.bs.dropdown', (event) => {
+        if (event.clickEvent) return false;
+        activateTool($("input:checked[name=tool").val());
+    });
+    $("#mathQuill").on('show.bs.dropdown', (event) => {
+        activateTool("quill");
+    });
+
     id = window.location.pathname.split("/").filter(v => v);
     doc = globals.socket().get('palapala', id[0]);
     doc.on('load', function () {
@@ -330,7 +339,7 @@ const desmosTool = new Tool({
     //setState: false,
     localChange: false,
     onMouseDown: (event) => {
-        if (event.event.button ===2 && desmosTool.calc) {
+        if (event.event.button === 2 && desmosTool.calc) {
             desmosTool.destroyDesmos();
             doc.submitOp([{ p: ["desmos"], oi: null }]);
             event.preventDefault();
@@ -407,6 +416,48 @@ const desmosTool = new Tool({
         desmosTool.calc = null;
     }
 });
+
+const quillTool = new Tool({
+    name: "quill",
+    MQ: MathQuill.getInterface(2),
+    rect: null,
+    input: null,
+    field: null,
+    onMouseDown: (event) => {
+        if (!quillTool.rect) {
+            quillTool.rect = Shape.Rectangle({ from: event.point, to: event.point, strokeWidth: 1 })
+        }
+        quillTool.rect.visible = true;
+    },
+    onMouseDrag: (event) => {
+        if (quillTool.rect) {
+            quillTool.rect.size.set(event.point - event.downPoint);
+            quillTool.rect.position.set((event.point + event.downPoint) / 2);
+        }
+    },
+    onMouseUp: (event) => {
+        quillTool.initQuill();
+        quillTool.rect.visible = false;
+        quillTool.field.css({ left: quillTool.rect.bounds.left, top: quillTool.rect.bounds.center.y, transform: "translateY(-50%)", fontSize: quillTool.rect.bounds.height });
+    },
+    initQuill: () => {
+        if (!quillTool.input) {
+            quillTool.input = quillTool.MQ.MathField($("#mqinput")[0], {
+                handlers: {
+                    edit: () => quillTool.field.data('mq').latex(quillTool.input.latex())
+                }
+            });
+        }
+        if (!quillTool.field) {
+            quillTool.field = $('<span style="position:absolute;z-index:-0.5"></span>');
+            quillTool.field.insertBefore("#canvas");
+            quillTool.field.data({ mq: quillTool.MQ.StaticMath(quillTool.field[0]) });
+            let center = paper.view.center;
+            quillTool.field.css({ left: center.x, top: center.y })
+        }
+    }
+});
+quillTool.initQuill();
 
 function undo(event) {
     let item = project.layers["mainLayer"].lastChild;
