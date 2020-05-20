@@ -1,4 +1,3 @@
-let mementos = [];
 let doc;
 let id;
 
@@ -59,28 +58,56 @@ function init() {
             project.importJSON(doc.data.layers);
             if (doc.data.desmos) {
                 desmosTool.initDesmos();
-                //debugger                       
                 desmosTool.path.importJSON(doc.data.desmos.rect);
                 desmosTool.setPosition();
-                //desmosTool.desmos.css("zIndex", -1);
                 desmosTool.setState(doc.data.desmos.state);
             }
+            if (doc.data.undo.length){
+                $("#redoButton").removeAttr("disabled");
+            } else {
+                $("#redoButton").prop("disabled", true);
+            }
+
         }
     });
     doc.on('op', function (op, source) {
         if (!source) {
             console.log(op);
-            op.filter(i => i.p[0] === "layers").forEach(item => { replaceData(item) });
-            op.filter(i => i.p[0] === "desmos").forEach(item => {
-                if (doc.data.desmos) {
-                    desmosTool.initDesmos();
-                    desmosTool.path.importJSON(doc.data.desmos.rect);
-                    desmosTool.setPosition();
-                    desmosTool.setState(doc.data.desmos.state);
-                } else {
-                    desmosTool.destroyDesmos();
+            op.forEach(item => {
+                switch (item.p[0]) {
+                    case "layers":
+                        replaceData(item);
+                        break;
+                    case "desmos":
+                        if (doc.data.desmos) {
+                            desmosTool.initDesmos();
+                            desmosTool.path.importJSON(doc.data.desmos.rect);
+                            desmosTool.setPosition();
+                            desmosTool.setState(doc.data.desmos.state);
+                        } else {
+                            desmosTool.destroyDesmos();
+                        }
+                        break;
+                    case "undo":
+                        if (doc.data.undo.length){
+                            $("#redoButton").removeAttr("disabled");
+                        } else {
+                            $("#redoButton").prop("disabled", true);
+                        }
+                        break;
                 }
             });
+            // op.filter(i => i.p[0] === "layers").forEach(item => { replaceData(item) });
+            // op.filter(i => i.p[0] === "desmos").forEach(item => {
+            //     if (doc.data.desmos) {
+            //         desmosTool.initDesmos();
+            //         desmosTool.path.importJSON(doc.data.desmos.rect);
+            //         desmosTool.setPosition();
+            //         desmosTool.setState(doc.data.desmos.state);
+            //     } else {
+            //         desmosTool.destroyDesmos();
+            //     }
+            // });
         }
     });
     doc.subscribe();
@@ -363,7 +390,7 @@ const desmosTool = new Tool({
         //    debugger;
         if (desmosTool.path && event.event.button !== 2) {
             desmosTool.initDesmos();
-            desmosTool.desmos.css({zIndex: 1, opacity:0.95});
+            desmosTool.desmos.css({ zIndex: 1, opacity: 0.95 });
             desmosTool.setPosition();
             desmosTool.path.visible = false;
             doc.submitOp([{ p: ["desmos"], oi: { rect: desmosTool.path.exportJSON({ asString: false }), state: desmosTool.calc.getState() } }]);
@@ -464,25 +491,23 @@ const quillTool = new Tool({
 function undo(event) {
     let item = project.layers["mainLayer"].lastChild;
     if (item) {
-        mementos.push(item);
-        doc.submitOp([{ p: ["layers", 0, 1, "children", item.index], ld: item.exportJSON({ asString: false }) }]);
+        let json = item.exportJSON({ asString: false });
+        doc.submitOp([
+            { p: ["layers", 0, 1, "children", item.index], ld: json },
+            { p: ["undo", 0], li: json }
+        ]);
         item.remove();
         $("#redoButton").removeAttr("disabled");
     }
 }
 
 function redo(event) {
-    let item = mementos.pop();
-    if (mementos.length == 0) $("#redoButton").prop('disabled', true);
+    let item = doc.data.undo.length && doc.data.undo[0];
+    if (doc.data.undo.length === 1) $("#redoButton").prop('disabled', true);
     if (item) {
-        project.layers["mainLayer"].addChild(item);
-        submitPath(item);
+        submitPath(paper.Item.importJSON(item));
+        doc.submitOp([{ p: ["undo", 0], ld: item }]);
     }
-}
-
-function clearUndo() {
-    mementos.length = 0;
-    $("#redoButton").prop('disabled', true);
 }
 
 function replaceData(op) {
