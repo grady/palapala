@@ -61,7 +61,7 @@ function init() {
                 //debugger                       
                 desmosTool.path.importJSON(doc.data.desmos.rect);
                 desmosTool.setPosition();
-                desmosTool.desmos.css("zIndex", -1);
+                //desmosTool.desmos.css("zIndex", -1);
                 desmosTool.setState(doc.data.desmos.state);
             }
         }
@@ -112,7 +112,7 @@ function activateTool(name) {
     if (name === "desmos") {
         desmosTool.desmos && desmosTool.desmos.css({ zIndex: 1, opacity: 0.95 });
     } else if (paper.tool.name === "desmos") {
-        desmosTool.desmos && desmosTool.desmos.css({ zIndex: -1, opacity: 1 });
+        desmosTool.desmos && desmosTool.desmos.css({ zIndex: "initial", opacity: 1 });
     }
     tools.find(tool => tool.name === name).activate();
 }
@@ -362,6 +362,7 @@ const desmosTool = new Tool({
         //    debugger;
         if (desmosTool.path && event.event.button !== 2) {
             desmosTool.initDesmos();
+            desmosTool.desmos.css({zIndex: 1, opacity:0.95});
             desmosTool.setPosition();
             desmosTool.path.visible = false;
             doc.submitOp([{ p: ["desmos"], oi: { rect: desmosTool.path.exportJSON({ asString: false }), state: desmosTool.calc.getState() } }]);
@@ -399,7 +400,7 @@ const desmosTool = new Tool({
             desmosTool.path = new Shape.Rectangle({ strokeWidth: 1, visible: false });
         }
         if (!desmosTool.desmos) {
-            desmosTool.desmos = $("<div id='desmos' style='position:absolute;z-index:1;opacity:0.95;'></div>");
+            desmosTool.desmos = $("<div id='desmos' style='position:absolute;'></div>");
             desmosTool.desmos.insertBefore("#canvas");
         }
         if (!desmosTool.calc) {
@@ -449,7 +450,7 @@ const quillTool = new Tool({
             });
         }
         if (!quillTool.field) {
-            quillTool.field = $('<span style="position:absolute;z-index:-0.5"></span>');
+            quillTool.field = $('<span style="position:absolute"></span>');
             quillTool.field.insertBefore("#canvas");
             quillTool.field.data({ mq: quillTool.MQ.StaticMath(quillTool.field[0]) });
             let center = paper.view.center;
