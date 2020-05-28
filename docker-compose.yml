@@ -1,0 +1,14 @@
+version: '3'
+services:
+  web:
+    build:
+
+      context: ./app
+      args:
+        - icc=false
+        - security-opt=no-new-privileges
+    # environment:
+    #    - MONGO_URL=
+    ports:
+      - "8000:8000"
+    restart: on-failure:5
