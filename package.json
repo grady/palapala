@@ -1,12 +1,16 @@
 {
   "name": "palapala",
   "version": "0.0.1",
-  "description": "Collaborative Whiteboard",
+  "description": "Collaborative whiteboard web app",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "nodemon -i node_modules src/server.js",
     "build": "webpack --watch -d --mode=development"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/grady/palapala.git"
   },
   "author": "Grady Weyenberg",
   "license": "GPL-3.0",
