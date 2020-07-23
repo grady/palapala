@@ -17,64 +17,43 @@ canvas[data-paper-resize]{
     width: 100%;
     height: 100%;
 }
-.sp-dd {
-    display:none;
-}
-.sp-preview{
-    margin: 0;
-}
-.sp-palette-container {
-    background-color: #6c757d;
-}
-.sp-palette .sp-thumb-el{
-    border-color:black
-}
-.main-tools {
+#toolbar {
     position: absolute;
     z-index: 10;
     top:50%;
     -ms-transform: translateY(-50%);
     transform: translateY(-50%);    
 }
-.main-tools label {
-    margin:0;
+#documentBar{
+    position: absolute;
+    z-index: 10;
+    bottom: 0px;
 }
-.color-picker {
-    padding:0;
+#toolbar label, #toolbar button {
+    margin: 0;
+    padding: 0;
+    min-width: 2em;
 }
 input[type=range][orient=vertical]
 {
     writing-mode: bt-lr; /* IE */
     -webkit-appearance: slider-vertical; /* WebKit */
-    width: 8px;
+    min-width: 1em;
+    width: 1em;
     height: 100px;
 }
-.main-tools .tight .dropdown-menu{
+#toolbar .sp-replacer {border:0;}
+#toolbar .sp-preview {margin:0;border:0;}
+/* object{pointer-events: none;} */
+#documentBar .tight .dropdown-menu {
     padding: 0;
     border: 0;
-    margin-left: -1px;
+    margin-left: 1px;
     min-width: 0;
 }
-.mq-math-mode .mq-overline, .mq-math-mode .mq-denominator{
-    border-top-width: 0.05em;
+#documentBar .tight .dropdown-menu button {
+    border-radius: 0;
 }
-.mq-math-mode .mq-underline{
-    border-bottom-width: 0.05em;
-}
-.mq-math-mode .mq-sqrt-stem {
-    border-top-width: 0.05em;
-    margin-top: 0.1em;
-    padding-top: 0.05em;
-}
-.mq-math-mode .mq-overarrow {
-    margin: 0.15em 0.1em 0 0.1em;
-    border-top-width: 0.05em;
-}
-.mq-math-mode .mq-overarrow::before {
-    font-size: 0.4em;
-    top: -0.5em;
-    transform: translateX(0.2em);
-}
-.mq-math-mode .mq-overarrow.mq-arrow-left::before {
-    transform: scaleX(-1) translateX(0.2em);
-}
+#lockButton:checked + label > svg:first-of-type {display:none;}
+#lockButton + label > svg:last-of-type {display:none;}
+#lockButton:checked + label > svg:last-of-type {display:inline-block;}

@@ -1,9 +1,5 @@
-lib/v1.2.4.tar.gz
 node_modules/
 package-lock.json
-lib/
 js/browser.js
-lib
-favicon_package_v0.16.zip
 palapala.service
-static/
+dist/
