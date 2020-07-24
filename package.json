@@ -29,7 +29,7 @@
     "jquery": "^3.5.1",
     "lodash.isequal": "^4.5.0",
     "mongodb": "^3.5.9",
-    "paper": "^0.12.11",
+    "paper": "^0.12.4",
     "popper.js": "^1.16.1",
     "reconnecting-websocket": "^4.4.0",
     "sharedb": "^1.4.1",
