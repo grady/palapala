@@ -22,7 +22,7 @@ MongoClient.connect(process.env.MONGO_URL, { useUnifiedTopology: true }, (err, d
   });
   sharedbMongo = require('sharedb-mongo')({ mongo: (cb) => { cb(err, dbase) } });
   const sharedb = new ShareDb({ db: sharedbMongo });
-
+  sharedb.addProjection('document_list', 'palapala', {id: true});
   const app = express();
   app.use(sessionParser);
 
@@ -57,6 +57,11 @@ MongoClient.connect(process.env.MONGO_URL, { useUnifiedTopology: true }, (err, d
     }
     next();
   });
+  sharedb.use('query', (ctx, next) => {
+    ctx.query.owner = ctx.agent.connectSession.userID;
+    next();
+  });
+
 
   shareDbAccess(sharedb);
   sharedb.allowCreate('palapala', async (id, doc, sess) => true);

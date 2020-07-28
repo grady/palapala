@@ -57,3 +57,21 @@ input[type=range][orient=vertical]
 #lockButton:checked + label > svg:first-of-type {display:none;}
 #lockButton + label > svg:last-of-type {display:none;}
 #lockButton:checked + label > svg:last-of-type {display:inline-block;}
+#doc-container {
+    position: absolute;
+    right: 0px;
+    height: 100%;
+    overflow-y: scroll;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+#doc-container::-webkit-scrollbar {
+display:none;
+}
+#doc-list {
+    display: none;
+    min-width: 200px;
+    width: 20%;
+    list-style-type: none;
+    padding-left: 10px;
+}

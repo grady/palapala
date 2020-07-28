@@ -88,6 +88,14 @@ export function connect() {
   });
   doc.on('error', (err) => { console.log(err.message) });
   doc.subscribe();
+  let query = conn.createSubscribeQuery('document_list', {});
+  globals.query = query;
+  query.on('ready', () => {
+    query.results.forEach((item) => {
+      $("<li><a href='/"+ item.id + "/'>" + item.id +"</a></li>").appendTo("#doc-list");
+    });
+  });
+  $("#docButton").on('click', () => {$("#doc-list").toggle();});
 }
 
 function submitPath(path) {
