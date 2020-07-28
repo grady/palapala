@@ -21,7 +21,7 @@ MongoClient.connect(process.env.MONGO_URL, { useUnifiedTopology: true }, (err, d
     store: new MongoStore({ client: dbase }),
   });
   sharedbMongo = require('sharedb-mongo')({ mongo: (cb) => { cb(err, dbase) } });
-  const sharedb = new ShareDb({db: sharedbMongo});
+  const sharedb = new ShareDb({ db: sharedbMongo });
 
   const app = express();
   app.use(sessionParser);
@@ -64,27 +64,33 @@ MongoClient.connect(process.env.MONGO_URL, { useUnifiedTopology: true }, (err, d
   sharedb.allowUpdate('palapala', async (id, oldDoc, newDoc, ops, sess) => oldDoc.edit || sess.userID === oldDoc.owner);
   sharedb.allowDelete('palapala', async (id, doc, sess) => false);
 
-  function close() {
-    wss.close(() => {
-      console.log("wss closed.");
-      sharedb.close(() => {
-        console.log("sharedb closed.");
-        server.close(() => {
-          console.log("server closed.");
-          process.exit(0);
-        });
-      });
+
+
+  function close(obj) {
+    return new Promise((resolve, reject) => {
+      obj.close((err, res) => { if (err) reject(err); else resolve(res); })
     });
   }
 
-  process.on('SIGUSR2', () => {
-    console.log("SIGUSR2 recieved");
-    close();
-  });
-  process.on('SIGINT', () => {
-    console.log("SIGINT recieved.");
-    close();
-  });
+  async function shutdown(msg) {
+    console.log(msg);
+    try {
+      console.log('Shutdown web socket server.');
+      await close(wss);
+      console.log('Closing sharedb connection.')
+      await close(sharedb);
+      console.log('Closing express server.');
+      await close(server);
+    } catch (err) {
+      console.log(err);
+      process.exit(1);
+    }
+    console.log('Shutdown complete.');
+    process.exit(0);
+  }
+
+  process.on('SIGUSR2', () => { shutdown("SIGUSR2 recieved"); });
+  process.on('SIGINT', () => { shutdown("SIGINT recieved."); });
 
 });
 
