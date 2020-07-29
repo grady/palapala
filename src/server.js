@@ -7,7 +7,6 @@ let ShareDb = require('sharedb');
 let shareDbAccess = require('sharedb-access');
 let WebSocketJSONStream = require('websocket-json-stream');
 let shortid = require('shortid');
-const { escapeSelector } = require('jquery');
 let MongoClient = require('mongodb');
 
 MongoClient.connect(process.env.MONGO_URL, { useUnifiedTopology: true }, (err, dbase) => {
