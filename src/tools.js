@@ -90,12 +90,17 @@ export function connect() {
   doc.subscribe();
   let query = conn.createSubscribeQuery('document_list', {});
   globals.query = query;
-  query.on('ready', () => {
+
+  function updateDocumentList() {
+    $("#doc-list").empty();
     query.results.forEach((item) => {
-      $("<li><a href='/"+ item.id + "/'>" + item.id +"</a></li>").appendTo("#doc-list");
+      $("<li><a href='/" + item.id + "/'>" + item.id + "</a></li>").appendTo("#doc-list");
     });
-  });
-  $("#docButton").on('click', () => {$("#doc-list").toggle();});
+  }
+  
+  query.on('ready', updateDocumentList);
+  query.on('changed', updateDocumentList);
+  $("#docButton").on('click', () => { $("#doc-list").toggle(); });
 }
 
 function submitPath(path) {
