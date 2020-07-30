@@ -1,3 +1,5 @@
+/*eslint no-unused-vars: ["error", { "argsIgnorePattern": "^_" }]*/
+
 import $ from 'jquery';
 import ReconnectingWebSocket from 'reconnecting-websocket';
 import ShareDb from 'sharedb/lib/client';
@@ -89,7 +91,6 @@ export function connect() {
   doc.on('error', (err) => { console.log(err.message) });
   doc.subscribe();
   let query = conn.createSubscribeQuery('document_list', {});
-  globals.query = query;
 
   function updateDocumentList() {
     $("#doc-list").empty();
@@ -97,7 +98,7 @@ export function connect() {
       $("<li><a href='/" + item.id + "/'>" + item.id + "</a></li>").appendTo("#doc-list");
     });
   }
-  
+
   query.on('ready', updateDocumentList);
   query.on('changed', updateDocumentList);
   $("#docButton").on('click', () => { $("#doc-list").toggle(); });
@@ -140,7 +141,7 @@ const penTool = new paper.Tool({
   name: "pen",
   minDistance: 2,
   path: null,
-  onMouseDown: (event) => {
+  onMouseDown: (_event) => {
     penTool.path = new paper.Path({
       strokeColor: paper.project.currentStyle.strokeColor.clone(),
       strokeWidth: paper.project.currentStyle.strokeWidth
@@ -176,7 +177,7 @@ const eraseTool = new paper.Tool({
   onMouseDrag: (event) => {
     eraseTool.path.add(event.point);
   },
-  onMouseUp: (event) => {
+  onMouseUp: (_event) => {
     eraseTool.path.simplify();
     submitPath(eraseTool.path);
     eraseTool.path = null;
@@ -205,12 +206,12 @@ const highlightTool = new paper.Tool({
   name: "highlight",
   path: null,
   minDistance: 2,
-  onMouseDown: (event) => {
+  onMouseDown: (_event) => {
     highlightTool.path = new paper.Path({ strokeWidth: paper.project.currentStyle.strokeWidth * 5 });
     highlightTool.path.strokeColor.alpha = 0.4;
   },
   onMouseDrag: event => highlightTool.path.add(event.point),
-  onMouseUp: (event) => {
+  onMouseUp: (_event) => {
     submitPath(highlightTool.path);
     highlightTool.path = null
   }
@@ -226,7 +227,7 @@ const lineTool = new paper.Tool({
     lineTool.path.lastSegment.point.set(event.point);
     lineTool.path.firstSegment.point.set(event.modifiers.shift ? lineMirror(event) : event.downPoint);
   },
-  onMouseUp: (event) => {
+  onMouseUp: (_event) => {
     submitPath(lineTool.path);
     lineTool.path = null;
   },
@@ -303,7 +304,7 @@ const desmosTool = new paper.Tool({
       desmosTool.desmos.insertBefore("#canvas");
     }
     if (!desmosTool.calc) {
-      desmosTool.calc = Desmos.GraphingCalculator(desmosTool.desmos[0], { expressionsCollapsed: true });
+      desmosTool.calc = window.Desmos.GraphingCalculator(desmosTool.desmos[0], { expressionsCollapsed: true });
       desmosTool.calc.observeEvent("change", desmosTool.changeWatcher);
     }
   },
