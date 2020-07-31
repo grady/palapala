@@ -1,5 +1,5 @@
 /*eslint no-unused-vars: ["error", { "argsIgnorePattern": "^_" }]*/
-
+require('dotenv').config();
 let express = require('express');
 let session = require('express-session');
 let MongoStore = require('connect-mongo')(session);
@@ -11,6 +11,24 @@ let shareDbAccess = require('sharedb-access');
 let WebSocketJSONStream = require('websocket-json-stream');
 let shortid = require('shortid');
 let MongoClient = require('mongodb');
+let passport, GoogleStrategy;//, ensureLoggedIn;
+
+if (process.env.GCID && process.env.GSECRET) {
+  passport = require('passport');
+  GoogleStrategy = require('passport-google-oauth20').Strategy;
+  //ensureLoggedIn = require('connect-ensure-login').ensureLoggedIn;
+
+  passport.use(new GoogleStrategy(
+    {
+      clientID: process.env.GCID,
+      clientSecret: process.env.GSECRET,
+      callbackURL: '/auth/google/callback',
+    },
+    (_accessToken, _refreshToken, profile, done) => { done(null, profile); }
+  ));
+  passport.serializeUser((user, done) => done(null, {email:user.emails[0].value, provider: user.provider, id:user.id}));
+  passport.deserializeUser((user, done) => done(null, user));
+}
 
 MongoClient.connect(process.env.MONGO_URL || 'mongodb://localhost:27017/', { useUnifiedTopology: true },
   (err, dbase) => {
@@ -31,6 +49,21 @@ MongoClient.connect(process.env.MONGO_URL || 'mongodb://localhost:27017/', { use
 
     app = express();
     app.use(sessionParser);
+
+    if (GoogleStrategy) {
+      app.use(passport.initialize());
+      app.use(passport.session());
+      app.get('/auth/google', passport.authenticate('google', { scope: ['email', 'profile'] }));
+      app.get('/auth/google/callback',
+        passport.authenticate('google', { failureRedirect: '/auth/google' }),
+        (req, res) => res.redirect(req.session.lastURL || '/'));
+      app.get('/logout', (req, res) => {
+        req.logout();
+        res.redirect('/');
+      });
+      //app.all('/:id/', ensureLoggedIn('/auth/google'));      
+    }
+
     app.use("/:id/", express.static(path.join(__dirname, "..")));
     app.use("/", (_req, res) => res.redirect("/" + shortid.generate()));
 
@@ -38,12 +71,15 @@ MongoClient.connect(process.env.MONGO_URL || 'mongodb://localhost:27017/', { use
     wss = new WebSocket.Server({ noServer: true });
 
     server.on('upgrade', (req, sock, head) => {
-      sessionParser(req, {}, () => { });
-      wss.handleUpgrade(req, sock, head, (ws) => { wss.emit('connection', ws, req) });
+      sessionParser(req, {}, () => {
+        if (req.session.passport.user) req.user = req.session.passport.user;//.emails[0].value;
+        wss.handleUpgrade(req, sock, head, (ws) => { wss.emit('connection', ws, req) });
+      });
     });
 
-    wss.on("connection", (ws, req) => {
-      console.log("connection accepted", req.url, req.sessionID);
+
+    wss.on('connection', (ws, req) => {
+      console.log('connection accepted', req.url, req.user, req.sessionID);
       let stream = new WebSocketJSONStream(ws);
       sharedb.listen(stream, req);
     });
