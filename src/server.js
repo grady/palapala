@@ -26,11 +26,11 @@ if (process.env.GCID && process.env.GSECRET) {
     },
     (_accessToken, _refreshToken, profile, done) => { done(null, profile); }
   ));
-  passport.serializeUser((user, done) => done(null, {email:user.emails[0].value, provider: user.provider, id:user.id}));
+  passport.serializeUser((user, done) => done(null, { email: user.emails[0].value, provider: user.provider, id: user.id }));
   passport.deserializeUser((user, done) => done(null, user));
 }
 
-MongoClient.connect(process.env.MONGO_URL || 'mongodb://localhost:27017/', { useUnifiedTopology: true },
+MongoClient.connect(process.env.MONGO_URL || 'mongodb://localhost/', { useUnifiedTopology: true },
   (err, dbase) => {
     let app, sessionParser, sharedb, server, wss;
     if (err) throw err;
@@ -72,7 +72,9 @@ MongoClient.connect(process.env.MONGO_URL || 'mongodb://localhost:27017/', { use
 
     server.on('upgrade', (req, sock, head) => {
       sessionParser(req, {}, () => {
-        if (req.session.passport.user) req.user = req.session.passport.user;//.emails[0].value;
+        if (req.session.passport && req.session.passport.user) {
+          req.user = req.session.passport.user;//.emails[0].value;
+        }
         wss.handleUpgrade(req, sock, head, (ws) => { wss.emit('connection', ws, req) });
       });
     });
@@ -115,8 +117,7 @@ MongoClient.connect(process.env.MONGO_URL || 'mongodb://localhost:27017/', { use
       });
     }
 
-    async function shutdown(msg) {
-      msg && console.log(msg);
+    async function shutdown() {
       try {
         console.log('Shutdown web socket server.');
         await close(wss);
@@ -134,6 +135,6 @@ MongoClient.connect(process.env.MONGO_URL || 'mongodb://localhost:27017/', { use
 
     process.on('SIGUSR2', shutdown);
     process.on('SIGINT', shutdown);
-
+    process.on('SIGTERM', shutdown);
   });
 
